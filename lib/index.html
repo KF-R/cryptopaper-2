@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
+  <title>Cryptopaper</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: left;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    canvas {
+      margin-left:0px;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    const TITLE = 'Cryptopaper';
+
+    const WIN_W = 2200;
+    const WIN_H = 1650;
+    const CHART_TOP = 450;
+    const CHART_BOTTOM = 1450;
+    const CHART_HEIGHT = CHART_BOTTOM - CHART_TOP;
+    const MIN_CONTRAST = 155;
+    const BLACK = [0, 0, 0];
+    let white = [255, 255, 255]; // white can be adjusted for contrast
+
+    let news = [];
+    let weather = '';
+    let ltc_btc_rate = 0.0;
+
+    let btcData = [];
+    let maxPrice = 0, minPrice = 0;
+    let lastClosePrice = 0;
+
+    let START_TIME = 0;
+    let CURRENT_VERSION = 0;
+    let LOCATION = '';
+    let IP_ADDR = '0.0.0.0';
+
+    let dataURL;
+
+    function preload() {
+      font = loadFont('CNR.otf');
+    }
+
+    function setup() {
+      angleMode(DEGREES);
+      createCanvas(WIN_W, WIN_H);
+      textAlign(LEFT, TOP);
+      textSize(32);
+      textFont(font);
+
+      fetchBitcoinData();
+      fetchLitecoinData();
+      fetchStatus();
+    }
+
+    function draw() {
+      background(220);
+
+      noStroke();
+      fill(0);
+      rect(0,0,width,215);
+      fill(255);
+      rect(800,5,600,205);
+
+      drawTimeAndDate();
+
+      drawBitcoinChart();
+
+      drawLitecoinData();
+
+      drawVolatilityIndicator();
+
+      drawNews();
+      
+      drawStatus();
+
+      let canvas = document.querySelector('canvas');
+      dataURL = canvas.toDataURL('image/png');
+
+    }
+
+    function drawLitecoinData() {
+      push();
+      fill(BLACK);
+      rect(width - 728, height - 120, 728, 120);
+      rect(width - 160, height - 160, 160, 40);
+      fill(white);
+      fontSize = 132;
+      textSize(fontSize);
+      text('LTC:' + nf(ltc_btc_rate,0,4),width - 724, height - fontSize + 16);
+      textSize(32);
+      text(' $' + nf(ltc_btc_rate * lastClosePrice,0,2), width - 144, height - 152);
+      pop();
+    }
+
+    function drawVolatilityIndicator() {
+      push();
+      stroke(0);
+      strokeWeight(3);
+      noFill();
+      circle(width / 2, CHART_BOTTOM + 101, 195);
+      rect((width / 2) - 164, CHART_BOTTOM + 5, 48, 192);
+
+      let sc = second();
+      let secondAngle = map(sc, 0, 60, 0, 360);
+      translate(width/2,CHART_BOTTOM + 101);
+      rotate(secondAngle - 90);
+      stroke(255, 0, 0);
+      line(30, 0, 90, 0);
+      pop(); 
+
+      if (btcData.length === 0) return;
+
+
+      // Volatility labels
+      push();
+      noStroke();
+      fill(BLACK);
+      textSize(42);
+      text('$' + numFormat(maxPrice - minPrice), (width / 2) + 88, CHART_BOTTOM + 3);
+      volatility = (maxPrice - minPrice) / maxPrice * 100;
+      text( nf(volatility, 0, 2) + '%', (width / 2) + 88, height - 42);
+
+      // Movement Indicator Box
+      let relPos = map(lastClosePrice, minPrice, maxPrice, 192, 0, true);
+      rect( (width / 2 - 160), CHART_BOTTOM + 5 + relPos, 38, 6);
+
+      let r = map(volatility, 0, 10, 0, 185, true);
+      circle(width / 2, CHART_BOTTOM + 101, r);
+
+      pop();
+    }
+
+    function drawBitcoinChart() {
+      push();
+      translate(0, 0);
+
+      stroke(0);
+      strokeWeight(3);
+      fill(255);
+      rect(3, CHART_TOP, WIN_W - 6, CHART_BOTTOM - 450);
+      strokeWeight(1);
+      // Vertical grid
+      for (let i = 1; i < 6; i += 1) {
+        let x = map(i, 0, 6, 3, WIN_W - 6);
+        line(x, CHART_TOP, x, CHART_BOTTOM); // Tick mark
+      }
+      fill(0);
+
+      if (btcData.length === 0) return;
+
+      // Draw the latest price 
+      noStroke();
+      fill(255);
+      textSize(208);
+      textAlign(RIGHT);
+      text('$' + numFormat(lastClosePrice) + '', WIN_W + 3, 8); //  Latest price
+
+      // Draw High/Low
+      fill(0);
+      textSize(120);
+      text('H:$' + numFormat(maxPrice) + '', WIN_W + 3, 218); //  High
+      text('L:$' + numFormat(minPrice) + '', WIN_W + 3, 336); //  High
+
+      // Plot data
+      noFill();
+      stroke(0, 0, 255);
+      strokeWeight(2);
+      beginShape();
+      for (let i = 0; i < btcData.length; i++) {
+        let x = map(i, 0, btcData.length - 1, 3, WIN_W - 6);
+        let y = map(btcData[i], minPrice, maxPrice, CHART_BOTTOM - 4, CHART_TOP + 2);
+        vertex(x, y);
+      }
+      endShape();
+      pop(); 
+
+    }
+
+    function drawTimeAndDate() {
+
+      dayName = weekday(day(), month(), year());
+
+      let currentDay = dayName + ' ' + getOrdinalString(day());
+      let currentMonth = getMonthName(month()) + ' \'' + nf(year() % 100, 2);
+
+      fill(0);
+      push();
+      textAlign(CENTER);
+
+      textSize(104);
+      text(currentDay, width / 2, 16);
+
+      textSize(88);
+      text(currentMonth, width / 2, 124);
+
+      pop();
+
+      push();
+      fill(255);
+      textSize(224);
+      let currentTime = nf(hour(), 2) + ':' + nf(minute(), 2); // + ':' + nf(second(), 2);
+      text(currentTime, 96 + 3, 3 + 3);
+      pop();
+    }
+
+    function drawNews(){
+      push();
+      headlineSize = 56;
+      textSize(headlineSize);
+      for(let i = 0; i < news.length; i++){
+        if (news[i].length > 52) {
+          newsItem = news[i].slice(0,51) + '…';
+        } else {
+          newsItem = news[i];
+        }
+
+        text(newsItem, 3, 218 + (i * (headlineSize + 1)));
+      }
+      pop();
+    }
+
+    function drawStatus(){
+      push();
+      textSize(24);
+      textAlign(CENTER);
+      text(LOCATION + '   ' + IP_ADDR, width - 520, CHART_BOTTOM + 10);
+      textAlign(RIGHT);
+      text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
+      textSize(16);
+      text('v' + CURRENT_VERSION, (width / 2) + 360, height - 18 );
+      pop();
+    }
+
+    function weekday(day, month, year) {
+      if (month < 3) {
+          month += 12;
+          year -= 1;
+      }
+      
+      const k = year % 100;
+      const j = Math.floor(year / 100);
+      
+      const h = (day + Math.floor((13 * (month + 1)) / 5) + k + Math.floor(k / 4) + Math.floor(j / 4) + 5 * j) % 7;
+      
+      const weekdays = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+      
+      return weekdays[h];
+    }
+
+    function getMonthName(m) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return months[m - 1];
+    }
+
+    function getOrdinalString(number) {
+      const suffixes = ["th", "st", "nd", "rd"];
+      const value = number % 100;
+      return number + (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0]);
+    }    
+    
+    function numFormat(number) {
+      return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function uptime(unixTimestamp) {
+        const now = new Date();
+        const then = new Date(unixTimestamp * 1000); // Convert to milliseconds
+        const diffInSeconds = Math.floor((now - then) / 1000);
+        
+        const days = Math.floor(diffInSeconds / (3600 * 24));
+        const hours = Math.floor((diffInSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((diffInSeconds % 3600) / 60);
+
+        let result = "";
+
+        if (days > 0) {
+            result += days + 'd';
+        }
+        if (hours > 0) {
+            result += hours + 'h';
+        }
+        if (minutes > 0 || result === "") {
+            result += minutes + 'm';
+        }
+
+        return result.trim() + '  ';
+    }    
+
+    function fetchNews(headlineCount = 4, timeout = 5000) {
+      const url = 'https://127.0.0.1:5000/fetch_news'; // URL of the proxy server
+
+      return fetch(url)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+              return response.json();
+          })
+          .then(data => {
+              return data.slice(0, headlineCount);
+          })
+          .catch(error => {
+              console.error('Fetch error:', error);
+              return ['', '', 'No headlines found'];
+          });
+      }
+
+    function fetchStatus() {
+      const url = 'https://127.0.0.1:5000/status'; // URL of the proxy server
+
+      return fetch(url)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+              return response.json();
+          })
+          .then(data => {
+              START_TIME = parseFloat(data['start_time']);
+              CURRENT_VERSION = data['version'];
+              IP_ADDR = data['ip_addr'];
+              LOCATION = data['location'];
+              return
+          })
+          .catch(error => {
+              console.error('Fetch error:', error);
+              return          });
+      }
+
+    function startFetchingHeadlines(interval = 60000) {
+      // Fetch headlines immediately
+      fetchNews().then(headlines => {
+          news = headlines;
+          // console.log(news);
+      });
+
+      // Set interval to fetch headlines (every 60 seconds by default)
+      setInterval(() => {
+          fetchNews().then(headlines => {
+              news = headlines;
+              // console.log(news);
+          });
+      }, interval);
+    }
+
+    function fetchLitecoinData() {
+      fetch('https://www.bitstamp.net/api/v2/ticker/ltcbtc')
+        .then(response => response.json())
+        .then(data => {
+            ltc_btc_rate = parseFloat(data['last']);
+        })
+        .catch(error => {
+            console.log('LTC TIMEOUT', `Using ${ltc_btc_rate}`);
+        });
+    }
+
+    function fetchBitcoinData() {
+      const URL = `https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=60&limit=360`;
+
+      fetch(URL)
+        .then(response => response.json())
+        .then(data => {
+          btcData = data.data.ohlc.map(item => parseFloat(item.close));
+          maxPrice = Math.max(...btcData);
+          minPrice = Math.min(...btcData);
+          lastClosePrice = btcData[btcData.length - 1];
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    function uploadCanvas() {
+      let xhr = new XMLHttpRequest();
+      xhr.open('POST', '/save', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+          console.log('Image saved:', xhr.responseText);
+        }
+      };
+
+      xhr.send('imgBase64=' + encodeURIComponent(dataURL));
+    } 
+
+    // Update chart daily at midnight
+    setInterval(fetchBitcoinData, 10000); // 30000 ms = 30 secs, 86400000 ms = 24 hours
+    setInterval(fetchLitecoinData, 120000); // 30000 ms = 30 secs, 86400000 ms = 24 hours
+    startFetchingHeadlines();
+
+    setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
+
+  </script>
+</body>
+</html>
