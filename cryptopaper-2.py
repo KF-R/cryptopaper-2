@@ -1,23 +1,73 @@
-
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS  # Import CORS
-import json, requests, string, random
-import shutil, glob, time
-import sys, os, re
+import json, requests
+import time
+import os, sys
 from werkzeug.utils import secure_filename
 from bs4 import BeautifulSoup
 import socket
 import base64
+
+import threading # For downloading war DB in background
 
 
 TITLE = 'Cryptopaper'
 VERSION = '2.0.0'
 LIBDIR = 'lib/'
 T_START = int(time.time())
+warData = []
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+def updateWarStats():
+    global warData
+    with open(os.path.join(LIBDIR,'war-db.json'), 'r') as file:
+        json_data = json.load(file)
+
+    # military_personnel_values = [day["militaryPersonnel"] for day in json_data["days"]]
+    # military_personnel_list = [
+    #     military_personnel_values[i] - military_personnel_values[i - 1]
+    #     for i in range(1, len(military_personnel_values))
+    # ]    
+
+    military_personnel_list = [day["militaryPersonnel"] for day in json_data["days"]]
+
+    print_log(military_personnel_list)
+    warData = remove_lower_than_preceding(military_personnel_list)
+
+def remove_lower_than_preceding(numbers):
+    if not numbers:
+        return []
+
+    max_so_far = numbers[0]
+    result = [max_so_far]
+
+    for num in numbers[1:]:
+        if num >= max_so_far:
+            result.append(num)
+            max_so_far = num
+
+    return result    
+
+def download_db():
+    url = 'https://raw.githubusercontent.com/andriilive/russia-casualties-ukraine-war-parser/main/db.json'
+    local_filename = 'war-db.json'
+    response = requests.get(url)
+    with open(os.path.join(LIBDIR, local_filename), 'wb') as f:
+        f.write(response.content)
+    print_log(f"Downloaded {local_filename}")
+    updateWarStats()
+
+def schedule_download(interval, func):
+    while True:
+        func()
+        time.sleep(interval)    
+
+@app.route('/wardata', methods=['GET'])
+def wardata():
+    if len(warData) < 1: updateWarStats()
+    return jsonify(warData)
 
 @app.route('/status', methods=['GET'])
 def status():
@@ -65,7 +115,6 @@ def serve_png(filename):
     except FileNotFoundError:
         # Log an error message or return a custom 404 error
         return "File not found", 404
-
 
 @app.route('/save', methods=['POST'])
 def save_canvas():
@@ -121,4 +170,11 @@ def print_log(log_string = '',log_to_file=True, noStdOut = True):
 
 if __name__ == '__main__':
     print_log(f"v{VERSION}: Initialising...")
-    app.run(debug=True, host='0.0.0.0', ssl_context='adhoc')            
+
+    # Start the scheduler in a separate thread
+    interval = 24 * 60 * 60  # 24 hours in seconds
+    download_thread = threading.Thread(target=schedule_download, args=(interval, download_db))
+    download_thread.daemon = True
+    download_thread.start()
+
+    app.run(debug=True, host='0.0.0.0', ssl_context='adhoc')
