@@ -8,9 +8,6 @@ from bs4 import BeautifulSoup
 import socket
 import base64
 
-import threading # For downloading war DB in background
-
-
 TITLE = 'Cryptopaper'
 VERSION = '2.0.0'
 LIBDIR = 'lib/'
@@ -19,55 +16,6 @@ warData = []
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-
-def updateWarStats():
-    global warData
-    with open(os.path.join(LIBDIR,'war-db.json'), 'r') as file:
-        json_data = json.load(file)
-
-    # military_personnel_values = [day["militaryPersonnel"] for day in json_data["days"]]
-    # military_personnel_list = [
-    #     military_personnel_values[i] - military_personnel_values[i - 1]
-    #     for i in range(1, len(military_personnel_values))
-    # ]    
-
-    military_personnel_list = [day["militaryPersonnel"] for day in json_data["days"]]
-
-    print_log(military_personnel_list)
-    warData = remove_lower_than_preceding(military_personnel_list)
-
-def remove_lower_than_preceding(numbers):
-    if not numbers:
-        return []
-
-    max_so_far = numbers[0]
-    result = [max_so_far]
-
-    for num in numbers[1:]:
-        if num >= max_so_far:
-            result.append(num)
-            max_so_far = num
-
-    return result    
-
-def download_db():
-    url = 'https://raw.githubusercontent.com/andriilive/russia-casualties-ukraine-war-parser/main/db.json'
-    local_filename = 'war-db.json'
-    response = requests.get(url)
-    with open(os.path.join(LIBDIR, local_filename), 'wb') as f:
-        f.write(response.content)
-    print_log(f"Downloaded {local_filename}")
-    updateWarStats()
-
-def schedule_download(interval, func):
-    while True:
-        func()
-        time.sleep(interval)    
-
-@app.route('/wardata', methods=['GET'])
-def wardata():
-    if len(warData) < 1: updateWarStats()
-    return jsonify(warData)
 
 @app.route('/status', methods=['GET'])
 def status():
@@ -79,7 +27,6 @@ def status():
         'location': 'Ottawa'
     }
     return jsonify(statusData)
-
 
 @app.route('/fetch_news', methods=['GET'])
 def fetch_bbc_news():
@@ -170,11 +117,4 @@ def print_log(log_string = '',log_to_file=True, noStdOut = True):
 
 if __name__ == '__main__':
     print_log(f"v{VERSION}: Initialising...")
-
-    # Start the scheduler in a separate thread
-    interval = 24 * 60 * 60  # 24 hours in seconds
-    download_thread = threading.Thread(target=schedule_download, args=(interval, download_db))
-    download_thread.daemon = True
-    download_thread.start()
-
     app.run(debug=True, host='0.0.0.0', ssl_context='adhoc')
