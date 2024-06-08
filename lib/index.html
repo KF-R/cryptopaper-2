@@ -45,10 +45,15 @@
     let LOCATION = '';
     let IP_ADDR = '0.0.0.0';
 
-    let dataURL;
+    let dataURL; // Screenshot image data
+
+    let rubData = [];
+    let warData = [];
+
 
     function preload() {
       font = loadFont('CNR.otf');
+      tryzub = loadImage('tryzub-100.png');
     }
 
     function setup() {
@@ -61,6 +66,9 @@
       fetchBitcoinData();
       fetchLitecoinData();
       fetchStatus();
+
+      fetchWarData();
+
     }
 
     function draw() {
@@ -84,10 +92,84 @@
       
       drawStatus();
 
+      drawExtras();
+
       let canvas = document.querySelector('canvas');
       dataURL = canvas.toDataURL('image/png');
 
     }
+
+    function drawExtras() {
+      push();
+      textAlign(CENTER);
+      textSize(40);
+      text('Day', (width / 2) - 230, CHART_BOTTOM + 100);
+      textSize(48);
+      text(warDays(), (width / 2) - 230, CHART_BOTTOM + 145);
+      pop();
+
+      image(tryzub, (width / 2) - 250, CHART_BOTTOM + 10, 45, 75);
+
+      push()
+      stroke(BLACK);
+      fill(200,200,255);
+      rect(6, CHART_BOTTOM + 6, 400, 190);
+
+      noFill();
+      stroke(BLACK);
+      strokeWeight(4);
+      beginShape(POINTS);
+      for (let i = 0; i < warData.length; i++) {
+        let x = map(i, 0, warData.length, 8, 404, true);
+        let y = map(warData[i], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 8, true);
+        vertex(x, y);
+      }
+      endShape();
+      noStroke();
+      fill(BLACK);
+      text(numFormat(warData[warData.length - 1]), 10, CHART_BOTTOM + 10);
+      fontSize = 16;
+      textSize(fontSize);
+      for (prevDays = 6; prevDays >= 0; prevDays--) {
+        text(''+ (warDays() - prevDays - 1) + ':  +' + numFormat(warData[warData.length - 1 - prevDays] - warData[warData.length - 2 - prevDays]), 10, CHART_BOTTOM + 26 + ((2 + fontSize) * (7 - prevDays)));
+      }
+
+ 
+      stroke(BLACK);
+      strokeWeight(1);
+      fill(200,255,200);
+      rect(415, CHART_BOTTOM + 6, 400, 190);
+
+      pop();
+    }
+
+    function fetchWarData() {
+      const url = 'https://127.0.0.1:5000/wardata'; // URL of the proxy server
+
+      return fetch(url)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+              return response.json();
+          })
+          .then(data => {
+              warData = data;
+              return data;
+          })
+          .catch(error => {
+              console.error('Fetch error:', error);
+              return ['No data'];
+          });
+      }
+
+    function warDays() {
+      const startDate = new Date('2022-02-24');
+      const currentDate = new Date();
+      const timeDiff = currentDate - startDate;
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+      return daysDiff;
+    }      
 
     function drawLitecoinData() {
       push();
@@ -120,7 +202,6 @@
       pop(); 
 
       if (btcData.length === 0) return;
-
 
       // Volatility labels
       push();
@@ -159,7 +240,7 @@
 
       if (btcData.length === 0) return;
 
-      // Draw the latest price 
+      // Draw spot price 
       noStroke();
       fill(255);
       textSize(208);
@@ -386,7 +467,7 @@
 
       xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          console.log('Image saved:', xhr.responseText);
+          console.log('Screenshot saved:', xhr.responseText);
         }
       };
 
