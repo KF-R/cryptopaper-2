@@ -10,7 +10,7 @@
       display: flex;
       flex-direction: column;
       align-items: left;
-      background-color: #f0f0f0;
+      background-color: #aaaaaa;
       margin: 0;
       padding: 0;
     }
@@ -30,7 +30,7 @@
     const CHART_HEIGHT = CHART_BOTTOM - CHART_TOP;
     const MIN_CONTRAST = 155;
     const BLACK = [0, 0, 0];
-    let white = [255, 255, 255]; // white can be adjusted for contrast
+    let white = [200, 200, 200]; // white can be adjusted for contrast
 
     let news = [];
     let weather = '';
@@ -68,16 +68,17 @@
       fetchStatus();
 
       fetchWarData();
+      fetchBtcRubData();
 
     }
 
     function draw() {
-      background(220);
+      background(white);
 
       noStroke();
       fill(0);
       rect(0,0,width,215);
-      fill(255);
+      fill(white);
       rect(800,5,600,205);
 
       drawTimeAndDate();
@@ -110,58 +111,76 @@
 
       image(tryzub, (width / 2) - 250, CHART_BOTTOM + 10, 45, 75);
 
+      if (warData.length == 0) return;
+
+      // War Chart
       push()
       stroke(BLACK);
-      fill(200,200,255);
+      fill(white);
       rect(6, CHART_BOTTOM + 6, 400, 190);
 
       noFill();
       stroke(BLACK);
-      strokeWeight(4);
-      beginShape(POINTS);
+      strokeWeight(2);
+      beginShape();
       for (let i = 0; i < warData.length; i++) {
-        let x = map(i, 0, warData.length, 8, 404, true);
-        let y = map(warData[i], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 8, true);
+        let x = map(i, 0, warData.length, 8, 412, true);
+        let y = map(warData[i], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
         vertex(x, y);
       }
       endShape();
       noStroke();
       fill(BLACK);
-      text(numFormat(warData[warData.length - 1]), 10, CHART_BOTTOM + 10);
+      text(nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
       fontSize = 16;
       textSize(fontSize);
-      for (prevDays = 6; prevDays >= 0; prevDays--) {
-        text(''+ (warDays() - prevDays - 1) + ':  +' + numFormat(warData[warData.length - 1 - prevDays] - warData[warData.length - 2 - prevDays]), 10, CHART_BOTTOM + 26 + ((2 + fontSize) * (7 - prevDays)));
+      for (prevDays = 5; prevDays >= 0; prevDays--) {
+        text(''+ getMonthName(month() - prevDays) + ': ' + nfc(warData[warData.length - 1 - prevDays]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevDays)));
       }
 
- 
+      // BTCRUB chart
       stroke(BLACK);
       strokeWeight(1);
-      fill(200,255,200);
+      fill(white);
       rect(415, CHART_BOTTOM + 6, 400, 190);
+      noFill();
+      beginShape();
+      for (let i = 0; i < rubData.length; i++) {
+        let x = map(i, 0, rubData.length, 416, 814, true);
+        let y = map(rubData[i], Math.min(...rubData), Math.max(...rubData), CHART_BOTTOM + 196, CHART_BOTTOM + 6, true);
+        vertex(x, y);
+      }
+      endShape();
+      noStroke();
+      fill(BLACK);
+      textSize(24);
 
+      text(nfc(nf(rubData[rubData.length - 1],0,0)) + 'r', 418, CHART_BOTTOM + 10);
+      textSize(16);
+      text('H: ' + nfc(nf(Math.max(...rubData),0,0)) + 'r', 420, CHART_BOTTOM + 36)
       pop();
     }
 
     function fetchWarData() {
-      const url = 'https://127.0.0.1:5000/wardata'; // URL of the proxy server
+      // fetch('https://russian-casualties.in.ua/api/v1/data/json/daily')
+      fetch('https://russian-casualties.in.ua/api/v1/data/json/monthly')
 
-      return fetch(url)
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Network response was not ok');
-              }
-              return response.json();
-          })
-          .then(data => {
-              warData = data;
-              return data;
-          })
-          .catch(error => {
-              console.error('Fetch error:', error);
-              return ['No data'];
-          });
-      }
+        .then(response => response.json())
+        .then(data => {
+            // Clear the existing warData array
+            warData = [];
+            // Extract the personnel values from the data object and update warData
+            for (const date in data.data) {
+                if (data.data.hasOwnProperty(date)) {
+                    warData.push(data.data[date].personnel);
+                }
+            }
+            console.log('warData updated:', warData);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+    }
 
     function warDays() {
       const startDate = new Date('2022-02-24');
@@ -208,15 +227,15 @@
       noStroke();
       fill(BLACK);
       textSize(42);
-      text('$' + numFormat(maxPrice - minPrice), (width / 2) + 88, CHART_BOTTOM + 3);
+      text('$' + nfc(maxPrice - minPrice), (width / 2) + 88, CHART_BOTTOM + 3);
       volatility = (maxPrice - minPrice) / maxPrice * 100;
       text( nf(volatility, 0, 2) + '%', (width / 2) + 88, height - 42);
 
       // Movement Indicator Box
-      let relPos = map(lastClosePrice, minPrice, maxPrice, 192, 0, true);
+      let relPos = map(lastClosePrice, minPrice, maxPrice, 192, 8, true);
       rect( (width / 2 - 160), CHART_BOTTOM + 5 + relPos, 38, 6);
 
-      let r = map(volatility, 0, 10, 0, 185, true);
+      let r = map(volatility, 0, 10, 0, 195, true);
       circle(width / 2, CHART_BOTTOM + 101, r);
 
       pop();
@@ -228,7 +247,7 @@
 
       stroke(0);
       strokeWeight(3);
-      fill(255);
+      fill(white);
       rect(3, CHART_TOP, WIN_W - 6, CHART_BOTTOM - 450);
       strokeWeight(1);
       // Vertical grid
@@ -242,16 +261,16 @@
 
       // Draw spot price 
       noStroke();
-      fill(255);
+      fill(white);
       textSize(208);
       textAlign(RIGHT);
-      text('$' + numFormat(lastClosePrice) + '', WIN_W + 3, 8); //  Latest price
+      text('$' + nfc(lastClosePrice) + '', WIN_W + 3, 8); //  Latest price
 
       // Draw High/Low
       fill(0);
       textSize(120);
-      text('H:$' + numFormat(maxPrice) + '', WIN_W + 3, 218); //  High
-      text('L:$' + numFormat(minPrice) + '', WIN_W + 3, 336); //  High
+      text('H:$' + nfc(maxPrice) + '', WIN_W, 218); //  High
+      text('L:$' + nfc(minPrice) + '', WIN_W, 336); //  High
 
       // Plot data
       noFill();
@@ -275,7 +294,7 @@
       let currentDay = dayName + ' ' + getOrdinalString(day());
       let currentMonth = getMonthName(month()) + ' \'' + nf(year() % 100, 2);
 
-      fill(0);
+      fill(BLACK);
       push();
       textAlign(CENTER);
 
@@ -288,7 +307,7 @@
       pop();
 
       push();
-      fill(255);
+      fill(white);
       textSize(224);
       let currentTime = nf(hour(), 2) + ':' + nf(minute(), 2); // + ':' + nf(second(), 2);
       text(currentTime, 96 + 3, 3 + 3);
@@ -341,7 +360,8 @@
 
     function getMonthName(m) {
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return months[m - 1];
+      const index = ((m - 1) % 12 + 12) % 12; // This handles both negative and positive out-of-bounds values
+      return months[index];
     }
 
     function getOrdinalString(number) {
@@ -350,10 +370,6 @@
       return number + (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0]);
     }    
     
-    function numFormat(number) {
-      return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-
     function uptime(unixTimestamp) {
         const now = new Date();
         const then = new Date(unixTimestamp * 1000); // Convert to milliseconds
@@ -435,6 +451,25 @@
       }, interval);
     }
 
+    function fetchBtcRubData() {
+      fetch('https://api.coindesk.com/v1/bpi/historical/close.json?currency=RUB&start=2019-01-01&end=2054-01-01')
+        .then(response => response.json())
+        .then(data => {
+            // Clear the existing rubData array
+            rubData = [];
+            // Extract the values from the bpi object and update rubData
+            for (const date in data.bpi) {
+                if (data.bpi.hasOwnProperty(date)) {
+                    rubData.push(data.bpi[date]);
+                }
+            }
+            console.log('rubData updated:', rubData);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+    }
+
     function fetchLitecoinData() {
       fetch('https://www.bitstamp.net/api/v2/ticker/ltcbtc')
         .then(response => response.json())
@@ -474,9 +509,11 @@
       xhr.send('imgBase64=' + encodeURIComponent(dataURL));
     } 
 
-    // Update chart daily at midnight
-    setInterval(fetchBitcoinData, 10000); // 30000 ms = 30 secs, 86400000 ms = 24 hours
-    setInterval(fetchLitecoinData, 120000); // 30000 ms = 30 secs, 86400000 ms = 24 hours
+    // Updates
+    setInterval(fetchBitcoinData, 10000);   // 30000 ms = 30 secs 
+    setInterval(fetchLitecoinData, 300000); // 300000 ms = 5 mins
+    setInterval(fetchWarData, 86400000);    // 86400000 ms = 24 hours
+    setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
     startFetchingHeadlines();
 
     setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
