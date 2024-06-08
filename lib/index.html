@@ -30,9 +30,15 @@
     const CHART_HEIGHT = CHART_BOTTOM - CHART_TOP;
     const MIN_CONTRAST = 155;
     const BLACK = [0, 0, 0];
-    let white = [200, 200, 200]; // white can be adjusted for contrast
+    let white = [220, 220, 220]; // white can be adjusted for contrast
 
     let news = [];
+//     let weather = `     \\  /       Partly cloudy
+//    _ /"".-.     +14(13) °C     
+//      \\_(   ).   ↑ 9 km/h       
+//      /(___(__)  24 km          
+//                 0.1 mm         
+// `;
     let weather = '';
     let ltc_btc_rate = 0.0;
 
@@ -63,12 +69,14 @@
       textSize(32);
       textFont(font);
 
+      fetchStatus();
+
       fetchBitcoinData();
       fetchLitecoinData();
-      fetchStatus();
 
       fetchWarData();
       fetchBtcRubData();
+      fetchWeather();
 
     }
 
@@ -109,7 +117,7 @@
       text(warDays(), (width / 2) - 230, CHART_BOTTOM + 145);
       pop();
 
-      image(tryzub, (width / 2) - 250, CHART_BOTTOM + 10, 45, 75);
+      image(tryzub, (width / 2) - 250, CHART_BOTTOM + 12, 45, 75);
 
       if (warData.length == 0) return;
 
@@ -159,6 +167,33 @@
       textSize(16);
       text('H: ' + nfc(nf(Math.max(...rubData),0,0)) + 'r', 420, CHART_BOTTOM + 36)
       pop();
+
+      push();
+      textSize(20);
+      textFont('Ubuntu Mono');
+      textAlign(LEFT);
+      text(weather, (width / 2) + 90, CHART_BOTTOM + 40);
+      pop();
+
+    }
+
+    function fetchWeather() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://wttr.in/' + LOCATION + '?0FQAT', true);
+        xhr.setRequestHeader('Accept', 'text/plain');
+        
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) { // 4 means the request is done
+                if (xhr.status === 200) { // 200 means a successful return
+                    weather = xhr.responseText;
+                    console.log(weather); // For debugging purposes
+                } else {
+                    console.error('Error fetching weather data:', xhr.status);
+                }
+            }
+        };
+
+        xhr.send();
     }
 
     function fetchWarData() {
@@ -205,6 +240,8 @@
     }
 
     function drawVolatilityIndicator() {
+      let volatility = (maxPrice - minPrice) / maxPrice * 100;
+
       push();
       stroke(0);
       strokeWeight(3);
@@ -216,8 +253,8 @@
       let secondAngle = map(sc, 0, 60, 0, 360);
       translate(width/2,CHART_BOTTOM + 101);
       rotate(secondAngle - 90);
-      stroke(255, 0, 0);
-      line(30, 0, 90, 0);
+      if (volatility > 6) stroke(white); else stroke(BLACK)
+      line(60, 0, 90, 0);
       pop(); 
 
       if (btcData.length === 0) return;
@@ -226,10 +263,10 @@
       push();
       noStroke();
       fill(BLACK);
-      textSize(42);
-      text('$' + nfc(maxPrice - minPrice), (width / 2) + 88, CHART_BOTTOM + 3);
-      volatility = (maxPrice - minPrice) / maxPrice * 100;
-      text( nf(volatility, 0, 2) + '%', (width / 2) + 88, height - 42);
+      textSize(36);
+      text('$' + nfc(maxPrice - minPrice), (width / 2) + 90, CHART_BOTTOM + 5);
+
+      text( nf(volatility, 0, 2) + '%', (width / 2) + 90, height - 32);
 
       // Movement Indicator Box
       let relPos = map(lastClosePrice, minPrice, maxPrice, 192, 8, true);
@@ -264,7 +301,7 @@
       fill(white);
       textSize(208);
       textAlign(RIGHT);
-      text('$' + nfc(lastClosePrice) + '', WIN_W + 3, 8); //  Latest price
+      text('$' + nfc(lastClosePrice) + '', WIN_W + 3, 10); //  Latest price
 
       // Draw High/Low
       fill(0);
@@ -274,7 +311,7 @@
 
       // Plot data
       noFill();
-      stroke(0, 0, 255);
+      stroke(BLACK);
       strokeWeight(2);
       beginShape();
       for (let i = 0; i < btcData.length; i++) {
@@ -514,6 +551,7 @@
     setInterval(fetchLitecoinData, 300000); // 300000 ms = 5 mins
     setInterval(fetchWarData, 86400000);    // 86400000 ms = 24 hours
     setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
+    setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
     startFetchingHeadlines();
 
     setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
