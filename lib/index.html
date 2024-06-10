@@ -20,240 +20,232 @@
   </style>
 </head>
 <body>
-  <script>
-    const TITLE = 'Cryptopaper';
+<script>
+const TITLE = 'Cryptopaper';
 
-    const WIN_W = 2200;
-    const WIN_H = 1650;
-    const CHART_TOP = 450;
-    const CHART_BOTTOM = 1450;
-    const MIN_CONTRAST = 155;
-    const BLACK = [0, 0, 0];
-    let white = [215, 215, 215]; // white can be adjusted for contrast
+const WIN_W = 2200;
+const WIN_H = 1650;
+const CHART_TOP = 450;
+const CHART_BOTTOM = 1450;
+const MIN_CONTRAST = 155;
+const BLACK = [0, 0, 0];
+let white = [215, 215, 215]; // white can be adjusted for contrast
 
-    let news = [];
-    let newsTS = 0;  // Timestamp of latest successful update
+let news = [];
+let newsTS = 0; // Timestamp of latest successful update
 
-//     let weather = `     \\  /       Partly cloudy
-//    _ /"".-.     +14(13) °C     
-//      \\_(   ).   ↑ 9 km/h       
-//      /(___(__)  24 km          
-//                 0.1 mm         
-// `;
-    let weather = '';
-    let weatherTS = 0;  // Timestamp of latest successful update
-    
-    let ltc_btc_rate = 0.0;
-    let ltc_btc_rateTS = 0; // Timestamp of latest successful update
+let weather = '';
+let weatherTS = 0; // Timestamp of latest successful update
 
-    let btcData = [];
-    let maxPrice = 0, minPrice = 0;
-    let lastClosePrice = 0;
+let ltc_btc_rate = 0.0;
+let ltc_btc_rateTS = 0; // Timestamp of latest successful update
 
-    // Server constants
-    let START_TIME = 0;
-    let CURRENT_VERSION = 0;
-    let LOCATION = '';
-    let IP_ADDR = '0.0.0.0';
+let btcData = [];
+let maxPrice = 0,
+    minPrice = 0;
+let lastClosePrice = 0;
 
-    let dataURL; // Screenshot image data
+// Server constants
+let START_TIME = 0;
+let CURRENT_VERSION = 0;
+let LOCATION = '';
+let IP_ADDR = '0.0.0.0';
 
-    let rubData = [];
-    let rubDataTS = 0; // Timestamp of latest successful update
-    let warData = [];
-    let warDataTS = 0; // Timestamp of latest successful update
+let dataURL; // Screenshot image data
 
-    let keywordList = ['ukraine', 'killed', 'putin'];
-    let keywordListTS = 0; // Timestamp of latest successful update (currently unused)
+let rubData = [];
+let rubDataTS = 0; // Timestamp of latest successful update
+let warData = [];
+let warDataTS = 0; // Timestamp of latest successful update
 
-    function preload() {
-      font = loadFont('CNR.otf');
-      tryzub = loadImage('tryzub-100.png');
-    }
+let keywordList = ['ukraine', 'killed', 'putin'];
+let keywordListTS = 0; // Timestamp of latest successful update (currently unused)
 
-    function setup() {
-      angleMode(DEGREES);
-      createCanvas(WIN_W, WIN_H);
-      textAlign(LEFT, TOP);
-      textSize(32);
-      textFont(font);
+function preload() {
+    font = loadFont('CNR.otf');
+    tryzub = loadImage('tryzub-100.png');
+}
 
-      fetchStatus();
-      fetchWords();
+function setup() {
+    angleMode(DEGREES);
+    createCanvas(WIN_W, WIN_H);
+    textAlign(LEFT, TOP);
+    textSize(32);
+    textFont(font);
 
-      fetchBitcoinData();
-      fetchLitecoinData();
+    fetchStatus();
+    fetchWords();
 
-      fetchWarData();
-      fetchBtcRubData();
-      fetchWeather();
+    fetchBitcoinData();
+    fetchLitecoinData();
 
-      fetchNews();
+    fetchWarData();
+    fetchBtcRubData();
+    fetchWeather();
 
-    }
+    fetchNews();
+}
 
-    function draw() {
-      background(white);
+function draw() {
+    background(white);
 
-      noStroke();
-      fill(0);
-      rect(0,0,width,215);
-      fill(white);
-      rect(800,5,600,205);
+    noStroke();
+    fill(0);
+    rect(0, 0, width, 215);
+    fill(white);
+    rect(800, 5, 600, 205);
 
-      drawTimeAndDate();
+    drawTimeAndDate();
 
-      drawBitcoinChart();
+    drawBitcoinChart();
 
-      drawLitecoinData();
+    drawLitecoinData();
 
-      drawVolatilityIndicator();
+    drawVolatilityIndicator();
 
-      drawNews();
-      
-      drawStatus();
+    drawNews();
 
-      drawExtras();
+    drawStatus();
 
-      drawTimestamps();
+    drawExtras();
 
-      let canvas = document.querySelector('canvas');
-      dataURL = canvas.toDataURL('image/png');
+    drawTimestamps();
 
-    }
+    let canvas = document.querySelector('canvas');
+    dataURL = canvas.toDataURL('image/png');
+}
 
-    function drawTimestamps() {
-      let TSline = '';
+function drawTimestamps() {
+    let TSline = '';
 
-      if (trim(uptime(warDataTS)) != '0m') {
+    if (trim(uptime(warDataTS)) != '0m') {
         TSline += 'δru:' + uptime(warDataTS);
-      }
-      if (trim(uptime(rubDataTS)) != '0m') {
+    }
+    if (trim(uptime(rubDataTS)) != '0m') {
         TSline += 'rub:' + uptime(rubDataTS);
-      }
-      if (trim(uptime(weatherTS)) != '0m') {
+    }
+    if (trim(uptime(weatherTS)) != '0m') {
         TSline += 'wtr:' + uptime(weatherTS);
-      }
-      if (trim(uptime(ltc_btc_rateTS)) != '0m') {
+    }
+    if (trim(uptime(ltc_btc_rateTS)) != '0m') {
         TSline += 'ltc:' + uptime(ltc_btc_rateTS);
-      }
-      if (trim(uptime(newsTS)) != '0m') {
+    }
+    if (trim(uptime(newsTS)) != '0m') {
         TSline += 'nws:' + uptime(newsTS);
-      }
-
-      push();
-      noStroke();
-      fill(BLACK);
-      textSize(24);
-      text(TSline, 1480, CHART_BOTTOM + 56);
-      pop();
     }
 
-    function drawExtras() {
-      push();
-      textAlign(CENTER);
-      textSize(40);
-      text('Day', (width / 2) - 230, CHART_BOTTOM + 100);
-      textSize(48);
-      text(warDays(), (width / 2) - 230, CHART_BOTTOM + 145);
-      pop();
+    push();
+    noStroke();
+    fill(BLACK);
+    textSize(24);
+    text(TSline, 1480, CHART_BOTTOM + 56);
+    pop();
+}
 
-      image(tryzub, (width / 2) - 250, CHART_BOTTOM + 12, 45, 75);
+function drawExtras() {
+    push();
+    textAlign(CENTER);
+    textSize(40);
+    text('Day', (width / 2) - 230, CHART_BOTTOM + 100);
+    textSize(48);
+    text(warDays(), (width / 2) - 230, CHART_BOTTOM + 145);
+    pop();
 
-      if (warData.length == 0) return;
+    image(tryzub, (width / 2) - 250, CHART_BOTTOM + 12, 45, 75);
 
-      // War Chart
-      let monthsListed = 6;
+    if (warData.length == 0) return;
 
-      push()
-      stroke(BLACK);
-      fill(white);
-      rect(6, CHART_BOTTOM + 6, 400, 190);
+    // War Chart
+    let monthsListed = 6;
 
-      noFill();
-      stroke(BLACK);
-      strokeWeight(2);
-      beginShape();
-      for (let i = 0; i < warData.length - 1; i++) {
+    push()
+    stroke(BLACK);
+    fill(white);
+    rect(6, CHART_BOTTOM + 6, 400, 190);
+
+    noFill();
+    stroke(BLACK);
+    strokeWeight(2);
+    beginShape();
+    for (let i = 0; i < warData.length - 1; i++) {
         let x = map(i, 0, warData.length, 8, 412, true);
         let y = map(warData[i], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
         vertex(x, y);
-      }
-      endShape();
-      let monthsX = map(warData.length - (monthsListed + 1),0,warData.length, 8, 412);
-      
-      let x = map(warData.length - 1, 0, warData.length, 8, 412, true);
-      let y = map(warData[warData.length - 1], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
-      
-      noStroke();
-      fill(BLACK);
-      rect(monthsX, CHART_BOTTOM + 106, 1, 90); // line indicating months listed
-      circle(x,y,11); // Current month, current figure
+    }
+    endShape();
+    let monthsX = map(warData.length - (monthsListed + 1), 0, warData.length, 8, 412);
 
-      text(nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
-      fontSize = 16;
-      textSize(fontSize);
-      for (prevDays = monthsListed - 1; prevDays >= 0; prevDays--) {
-        text(''+ getMonthName(month() - prevDays) + ': ' + nfc(warData[warData.length - 1 - prevDays]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevDays)));
-      }
-      text(getMonthName(month() - monthsListed), monthsX - 32, CHART_BOTTOM + 180);
+    let x = map(warData.length - 1, 0, warData.length, 8, 412, true);
+    let y = map(warData[warData.length - 1], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
+
+    noStroke();
+    fill(BLACK);
+    rect(monthsX, CHART_BOTTOM + 106, 1, 90); // line indicating months listed
+    circle(x, y, 11); // Current month, current figure
+
+    text(nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
+    fontSize = 16;
+    textSize(fontSize);
+    for (prevDays = monthsListed - 1; prevDays >= 0; prevDays--) {
+        text('' + getMonthName(month() - prevDays) + ': ' + nfc(warData[warData.length - 1 - prevDays]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevDays)));
+    }
+    text(getMonthName(month() - monthsListed), monthsX - 32, CHART_BOTTOM + 180);
 
 
-      // BTCRUB chart
-      stroke(BLACK);
-      strokeWeight(1);
-      fill(white);
-      rect(415, CHART_BOTTOM + 6, 400, 190);
-      noFill();
-      beginShape();
-      for (let i = 0; i < rubData.length; i++) {
+    // BTCRUB chart
+    stroke(BLACK);
+    strokeWeight(1);
+    fill(white);
+    rect(415, CHART_BOTTOM + 6, 400, 190);
+    noFill();
+    beginShape();
+    for (let i = 0; i < rubData.length; i++) {
         let x = map(i, 0, rubData.length, 416, 814, true);
         let y = map(rubData[i], Math.min(...rubData), Math.max(...rubData), CHART_BOTTOM + 196, CHART_BOTTOM + 6, true);
         vertex(x, y);
-      }
-      endShape();
-      noStroke();
-      fill(BLACK);
-      textSize(24);
-
-      text(nfc(nf(rubData[rubData.length - 1],0,0)) + 'r', 418, CHART_BOTTOM + 10);
-      textSize(16);
-      text('H: ' + nfc(nf(Math.max(...rubData),0,0)) + 'r', 420, CHART_BOTTOM + 36)
-      pop();
-
-      push();
-      textSize(20);
-      textFont('Ubuntu Mono');
-      textAlign(LEFT);
-      text(weather, (width / 2) + 90, CHART_BOTTOM + 40);
-      pop();
-
     }
+    endShape();
+    noStroke();
+    fill(BLACK);
+    textSize(24);
 
-    function fetchWeather() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'https://wttr.in/' + LOCATION + '?0FQAT', true);
-        xhr.setRequestHeader('Accept', 'text/plain');
-        
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) { // 4 means the request is done
-                if (xhr.status === 200) { // 200 means a successful return
-                    weather = xhr.responseText;
-                    weatherTS = Math.floor(Date.now() / 1000);
-                    // console.log(weather); // For debugging purposes
-                    // console.log(weatherTS);
-                } else {
-                    console.error('Error fetching weather data:', xhr.status);
-                }
+    text(nfc(nf(rubData[rubData.length - 1], 0, 0)) + 'r', 418, CHART_BOTTOM + 10);
+    textSize(16);
+    text('H: ' + nfc(nf(Math.max(...rubData), 0, 0)) + 'r', 420, CHART_BOTTOM + 36)
+    pop();
+
+    push();
+    textSize(20);
+    textFont('Ubuntu Mono');
+    textAlign(LEFT);
+    text(weather, (width / 2) + 90, CHART_BOTTOM + 40);
+    pop();
+}
+
+function fetchWeather() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://wttr.in/' + LOCATION + '?0FQAT', true);
+    xhr.setRequestHeader('Accept', 'text/plain');
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) { // 4 means the request is done
+            if (xhr.status === 200) { // 200 means a successful return
+                weather = xhr.responseText;
+                weatherTS = Math.floor(Date.now() / 1000);
+                // console.log(weather); // For debugging purposes
+                // console.log(weatherTS);
+            } else {
+                console.error('Error fetching weather data:', xhr.status);
             }
-        };
+        }
+    };
 
-        xhr.send();
-    }
+    xhr.send();
+}
 
-    function fetchWarData() {
-      // fetch('https://russian-casualties.in.ua/api/v1/data/json/daily')
-      fetch('https://russian-casualties.in.ua/api/v1/data/json/monthly')
+function fetchWarData() {
+    // fetch('https://russian-casualties.in.ua/api/v1/data/json/daily')
+    fetch('https://russian-casualties.in.ua/api/v1/data/json/monthly')
 
         .then(response => response.json())
         .then(data => {
@@ -271,316 +263,317 @@
         .catch(error => {
             console.error('Error fetching data:', error);
         });
-    }
+}
 
-    function warDays() {
-      const startDate = new Date('2022-02-24');
-      const currentDate = new Date();
-      const timeDiff = currentDate - startDate;
-      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
-      return daysDiff;
-    }      
+function warDays() {
+    const startDate = new Date('2022-02-24');
+    const currentDate = new Date();
+    const timeDiff = currentDate - startDate;
+    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+    return daysDiff;
+}
 
-    function drawLitecoinData() {
-      push();
-      fill(BLACK);
-      rect(width - 728, height - 120, 728, 120);
-      rect(width - 160, height - 160, 160, 40);
-      fill(white);
-      fontSize = 132;
-      textSize(fontSize);
-      textAlign(RIGHT);
-      text('LTC:' + nf(ltc_btc_rate,0,4),width, height - fontSize + 16);
-      textSize(32);
-      text(' $' + nf(ltc_btc_rate * lastClosePrice,0,2) + ' ', width - 4, height - 154);
-      pop();
-    }
+function drawLitecoinData() {
+    push();
+    fill(BLACK);
+    rect(width - 728, height - 120, 728, 120);
+    rect(width - 160, height - 160, 160, 40);
+    fill(white);
+    fontSize = 132;
+    textSize(fontSize);
+    textAlign(RIGHT);
+    text('LTC:' + nf(ltc_btc_rate, 0, 4), width, height - fontSize + 16);
+    textSize(32);
+    text(' $' + nf(ltc_btc_rate * lastClosePrice, 0, 2) + ' ', width - 4, height - 154);
+    pop();
+}
 
-    function drawVolatilityIndicator() {
-      let volatility = (maxPrice - minPrice) / maxPrice * 100;
+function drawVolatilityIndicator() {
+    let volatility = (maxPrice - minPrice) / maxPrice * 100;
 
-      push();
-      stroke(0);
-      strokeWeight(3);
-      noFill();
-      circle(width / 2, CHART_BOTTOM + 101, 195);
-      rect((width / 2) - 164, CHART_BOTTOM + 5, 48, 192);
+    push();
+    stroke(0);
+    strokeWeight(3);
+    noFill();
+    circle(width / 2, CHART_BOTTOM + 101, 195);
+    rect((width / 2) - 164, CHART_BOTTOM + 5, 48, 192);
 
-      let sc = second();
-      let secondAngle = map(sc, 0, 60, 0, 360);
-      translate(width/2,CHART_BOTTOM + 101);
-      rotate(secondAngle - 90);
-      if (volatility > 6) stroke(white); else stroke(BLACK)
-      line(60, 0, 90, 0);
-      pop(); 
+    let sc = second();
+    let secondAngle = map(sc, 0, 60, 0, 360);
+    translate(width / 2, CHART_BOTTOM + 101);
+    rotate(secondAngle - 90);
+    if (volatility > 6) stroke(white);
+    else stroke(BLACK)
+    line(60, 0, 90, 0);
+    pop();
 
-      if (btcData.length === 0) return;
+    if (btcData.length === 0) return;
 
-      // Volatility labels
-      push();
-      noStroke();
-      fill(BLACK);
-      textSize(32);
-      text('$' + nfc(maxPrice - minPrice), (width / 2) + 90, CHART_BOTTOM + 5);
+    // Volatility labels
+    push();
+    noStroke();
+    fill(BLACK);
+    textSize(32);
+    text('$' + nfc(maxPrice - minPrice), (width / 2) + 90, CHART_BOTTOM + 5);
 
-      text( nf(volatility, 0, 2) + '%', (width / 2) + 90, height - 30);
+    text(nf(volatility, 0, 2) + '%', (width / 2) + 90, height - 30);
 
-      // Movement Indicator Box
-      let relPos = map(lastClosePrice, minPrice, maxPrice, 0, 192, true);
-      rect( (width / 2) - 160, CHART_BOTTOM + 192 - relPos, 38, 6);
+    // Movement Indicator Box
+    let relPos = map(lastClosePrice, minPrice, maxPrice, 0, 192, true);
+    rect((width / 2) - 160, CHART_BOTTOM + 192 - relPos, 38, 6);
 
-      let r = map(volatility, 0, 10, 0, 195, true);
-      circle(width / 2, CHART_BOTTOM + 101, r);
+    let r = map(volatility, 0, 10, 0, 195, true);
+    circle(width / 2, CHART_BOTTOM + 101, r);
 
-      pop();
-    }
+    pop();
+}
 
-    function moonGuard(price) {
-      if (price < 100000) {
+function moonGuard(price) {
+    if (price < 100000) {
         return nfc(price);
-      } else {
+    } else {
         if (price < 1000000) {
-          return nf(price / 1000, 0, 1) + 'k';
+            return nf(price / 1000, 0, 1) + 'k';
         } else {
-          return nf(price / 1000000, 0, 3) + 'm';
+            return nf(price / 1000000, 0, 3) + 'm';
         }
-      }
     }
+}
 
-    function drawBitcoinChart() {
-      push();
-      translate(0, 0);
+function drawBitcoinChart() {
+    push();
+    translate(0, 0);
 
-      stroke(0);
-      strokeWeight(3);
-      fill(white);
-      rect(3, CHART_TOP, WIN_W - 6, CHART_BOTTOM - 450);
-      strokeWeight(1);
-      // Vertical grid
-      for (let i = 1; i < 6; i += 1) {
+    stroke(0);
+    strokeWeight(3);
+    fill(white);
+    rect(3, CHART_TOP, WIN_W - 6, CHART_BOTTOM - 450);
+    strokeWeight(1);
+    // Vertical grid
+    for (let i = 1; i < 6; i += 1) {
         let x = map(i, 0, 6, 3, WIN_W - 6);
         line(x, CHART_TOP, x, CHART_BOTTOM); // Tick mark
-      }
-      fill(0);
+    }
+    fill(0);
 
-      if (btcData.length === 0) return;
+    if (btcData.length === 0) return;
 
-      // Draw spot price 
-      noStroke();
-      fill(white);
-      textSize(208);
-      textAlign(RIGHT);
-      text('$' + moonGuard(lastClosePrice + 100000) + '', WIN_W, 10); //  Latest price
+    // Draw spot price 
+    noStroke();
+    fill(white);
+    textSize(208);
+    textAlign(RIGHT);
+    text('$' + moonGuard(lastClosePrice + 100000) + '', WIN_W, 10); // Latest price
 
-      // Draw High/Low
-      fill(0);
-      textSize(120);
-      text('H:$' + moonGuard(maxPrice + 100000) + '', WIN_W, 218); //  High
-      text('L:$' + moonGuard(minPrice + 100000) + '', WIN_W, 336); //  High
+    // Draw High/Low
+    fill(0);
+    textSize(120);
+    text('H:$' + moonGuard(maxPrice + 100000) + '', WIN_W, 218); // High
+    text('L:$' + moonGuard(minPrice + 100000) + '', WIN_W, 336); // High
 
-      // Plot data
-      noFill();
-      stroke(BLACK);
-      strokeWeight(2);
-      beginShape();
-      for (let i = 0; i < btcData.length; i++) {
+    // Plot data
+    noFill();
+    stroke(BLACK);
+    strokeWeight(2);
+    beginShape();
+    for (let i = 0; i < btcData.length; i++) {
         let x = map(i, 0, btcData.length - 1, 3, WIN_W - 6);
         let y = map(btcData[i], minPrice, maxPrice, CHART_BOTTOM - 4, CHART_TOP + 2);
         vertex(x, y);
-      }
-      endShape();
-      pop(); 
-
     }
+    endShape();
+    pop();
+}
 
-    function drawTimeAndDate() {
+function drawTimeAndDate() {
+    dayName = weekday(day(), month(), year());
 
-      dayName = weekday(day(), month(), year());
+    let currentDay = dayName + ' ' + getOrdinalString(day());
+    let currentMonth = getMonthName(month()) + ' \'' + nf(year() % 100, 2);
 
-      let currentDay = dayName + ' ' + getOrdinalString(day());
-      let currentMonth = getMonthName(month()) + ' \'' + nf(year() % 100, 2);
+    fill(BLACK);
+    push();
+    textAlign(CENTER);
 
-      fill(BLACK);
-      push();
-      textAlign(CENTER);
+    textSize(104);
+    text(currentDay, width / 2, 16);
 
-      textSize(104);
-      text(currentDay, width / 2, 16);
+    textSize(88);
+    text(currentMonth, width / 2, 124);
 
-      textSize(88);
-      text(currentMonth, width / 2, 124);
+    pop();
 
-      pop();
+    push();
+    fill(white);
+    textSize(224);
+    let currentTime = nf(hour(), 2) + ':' + nf(minute(), 2); // + ':' + nf(second(), 2);
+    text(currentTime, 95, 10);
+    pop();
+}
 
-      push();
-      fill(white);
-      textSize(224);
-      let currentTime = nf(hour(), 2) + ':' + nf(minute(), 2); // + ':' + nf(second(), 2);
-      text(currentTime, 95, 10);
-      pop();
-    }
-
-    function drawNews(){
-      push();
-      headlineSize = 56;
-      textSize(headlineSize);
-      for(let i = 0; i < news.length; i++){
+function drawNews() {
+    push();
+    headlineSize = 56;
+    textSize(headlineSize);
+    for (let i = 0; i < news.length; i++) {
         if (news[i].length > 52) {
-          newsItem = news[i].slice(0,51) + '…';
+            newsItem = news[i].slice(0, 51) + '…';
         } else {
-          newsItem = news[i];
+            newsItem = news[i];
         }
 
-        if (containsKeyword(news[i])  && (second() % 2 == 0)) {
-          fill(BLACK);
-          rect(0, 216 + (i * (headlineSize + 1)), 1600, headlineSize + 2);
-          fill(white);
+        if (containsKeyword(news[i]) && (second() % 2 == 0)) {
+            fill(BLACK);
+            rect(0, 216 + (i * (headlineSize + 1)), 1600, headlineSize + 2);
+            fill(white);
         } else {
-          fill(white);
-          rect(0, 217 + (i * (headlineSize + 1)), 1600, headlineSize + 2);
-          fill(BLACK);
+            fill(white);
+            rect(0, 217 + (i * (headlineSize + 1)), 1600, headlineSize + 2);
+            fill(BLACK);
         }
         text(newsItem, 2, 218 + (i * (headlineSize + 1)));
-      }
-      pop();
+    }
+    pop();
+}
+
+function drawStatus() {
+    push();
+    textSize(24);
+    textAlign(LEFT);
+    text(LOCATION + ' ' + IP_ADDR, 1480, CHART_BOTTOM + 10);
+    textAlign(RIGHT);
+    text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
+    textSize(16);
+    text('v' + CURRENT_VERSION, (width / 2) + 360, height - 18);
+    pop();
+}
+
+// Checks if a string contains any substrings from wordlist (case-insensitive)
+function containsKeyword(str) {
+    const lowerCaseStr = str.toLowerCase();
+    return keywordList.some(word => lowerCaseStr.includes(word.toLowerCase()));
+}
+
+function weekday(day, month, year) {
+    if (month < 3) {
+        month += 12;
+        year -= 1;
     }
 
-    function drawStatus(){
-      push();
-      textSize(24);
-      textAlign(LEFT);
-      text(LOCATION + '   ' + IP_ADDR, 1480, CHART_BOTTOM + 10);
-      textAlign(RIGHT);
-      text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
-      textSize(16);
-      text('v' + CURRENT_VERSION, (width / 2) + 360, height - 18 );
-      pop();
+    const k = year % 100;
+    const j = Math.floor(year / 100);
+
+    const h = (day + Math.floor((13 * (month + 1)) / 5) + k + Math.floor(k / 4) + Math.floor(j / 4) + 5 * j) % 7;
+
+    const weekdays = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+
+    return weekdays[h];
+}
+
+function getMonthName(m) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const index = ((m - 1) % 12 + 12) % 12; // This handles both negative and positive out-of-bounds values
+    return months[index];
+}
+
+function getOrdinalString(number) {
+    const suffixes = ["th", "st", "nd", "rd"];
+    const value = number % 100;
+    return number + (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0]);
+}
+
+function uptime(unixTimestamp) {
+    const now = new Date();
+    const then = new Date(unixTimestamp * 1000); // Convert to milliseconds
+    const diffInSeconds = Math.floor((now - then) / 1000);
+
+    const days = Math.floor(diffInSeconds / (3600 * 24));
+    const hours = Math.floor((diffInSeconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((diffInSeconds % 3600) / 60);
+
+    let result = "";
+
+    if (days > 0) {
+        result += days + 'd';
+    }
+    if (hours > 0) {
+        result += hours + 'h';
+    }
+    if (minutes > 0 || result === "") {
+        result += minutes + 'm';
     }
 
-    // Checks if a string contains any substrings from wordlist (case-insensitive)
-    function containsKeyword(str) {
-      const lowerCaseStr = str.toLowerCase();
-      return keywordList.some(word => lowerCaseStr.includes(word.toLowerCase()));
-    }
+    return result.trim() + ' ';
+}
 
-    function weekday(day, month, year) {
-      if (month < 3) {
-          month += 12;
-          year -= 1;
-      }
-      
-      const k = year % 100;
-      const j = Math.floor(year / 100);
-      
-      const h = (day + Math.floor((13 * (month + 1)) / 5) + k + Math.floor(k / 4) + Math.floor(j / 4) + 5 * j) % 7;
-      
-      const weekdays = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
-      
-      return weekdays[h];
-    }
+function fetchWords() {
+    const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
 
-    function getMonthName(m) {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const index = ((m - 1) % 12 + 12) % 12; // This handles both negative and positive out-of-bounds values
-      return months[index];
-    }
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Keywords updated:', data);
+            keywordList = data;
+            keywordListTS = Math.floor(Date.now() / 1000);
+            return;
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            return;
+        });
+}
 
-    function getOrdinalString(number) {
-      const suffixes = ["th", "st", "nd", "rd"];
-      const value = number % 100;
-      return number + (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0]);
-    }    
-    
-    function uptime(unixTimestamp) {
-        const now = new Date();
-        const then = new Date(unixTimestamp * 1000); // Convert to milliseconds
-        const diffInSeconds = Math.floor((now - then) / 1000);
-        
-        const days = Math.floor(diffInSeconds / (3600 * 24));
-        const hours = Math.floor((diffInSeconds % (3600 * 24)) / 3600);
-        const minutes = Math.floor((diffInSeconds % 3600) / 60);
+function fetchNews(headlineCount = 4, timeout = 5000) {
+    const url = 'https://127.0.0.1:5000/fetch_news';
 
-        let result = "";
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            news = data.slice(0, headlineCount);
+            newsTS = Math.floor(Date.now() / 1000);
+            return;
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            return ['', '', 'No headlines found'];
+        });
+}
 
-        if (days > 0) {
-            result += days + 'd';
-        }
-        if (hours > 0) {
-            result += hours + 'h';
-        }
-        if (minutes > 0 || result === "") {
-            result += minutes + 'm';
-        }
+function fetchStatus() {
+    const url = 'https://127.0.0.1:5000/status';
 
-        return result.trim() + '  ';
-    }    
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            START_TIME = parseFloat(data['start_time']);
+            CURRENT_VERSION = data['version'];
+            IP_ADDR = data['ip_addr'];
+            LOCATION = data['location'];
+            return;
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            return;
+        });
+}
 
-    function fetchWords() {
-      const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
-
-      return fetch(url)
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Network response was not ok');
-              }
-              return response.json();
-          })
-          .then(data => {
-              console.log('Keywords updated:', data);
-              keywordList = data;
-              keywordListTS = Math.floor(Date.now() / 1000);
-              return;
-          })
-          .catch(error => {
-              console.error('Fetch error:', error);
-              return          });
-      }
-
-    function fetchNews(headlineCount = 4, timeout = 5000) {
-      const url = 'https://127.0.0.1:5000/fetch_news'; 
-
-      return fetch(url)
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Network response was not ok');
-              }
-              return response.json();
-          })
-          .then(data => {
-              news = data.slice(0, headlineCount);
-              newsTS = Math.floor(Date.now() / 1000);
-              return;
-          })
-          .catch(error => {
-              console.error('Fetch error:', error);
-              return ['', '', 'No headlines found'];
-          });
-      }
-
-    function fetchStatus() {
-      const url = 'https://127.0.0.1:5000/status'; 
-
-      return fetch(url)
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Network response was not ok');
-              }
-              return response.json();
-          })
-          .then(data => {
-              START_TIME = parseFloat(data['start_time']);
-              CURRENT_VERSION = data['version'];
-              IP_ADDR = data['ip_addr'];
-              LOCATION = data['location'];
-              return;
-          })
-          .catch(error => {
-              console.error('Fetch error:', error);
-              return          });
-      }
-
-    function fetchBtcRubData() {
-      fetch('https://api.coindesk.com/v1/bpi/historical/close.json?currency=RUB&start=2019-01-01&end=2054-01-01')
+function fetchBtcRubData() {
+    fetch('https://api.coindesk.com/v1/bpi/historical/close.json?currency=RUB&start=2019-01-01&end=2054-01-01')
         .then(response => response.json())
         .then(data => {
             // Clear the existing rubData array
@@ -597,10 +590,10 @@
         .catch(error => {
             console.error('Error fetching data:', error);
         });
-    }
+}
 
-    function fetchLitecoinData() {
-      fetch('https://www.bitstamp.net/api/v2/ticker/ltcbtc')
+function fetchLitecoinData() {
+    fetch('https://www.bitstamp.net/api/v2/ticker/ltcbtc')
         .then(response => response.json())
         .then(data => {
             ltc_btc_rate = parseFloat(data['last']);
@@ -609,47 +602,47 @@
         .catch(error => {
             console.log('LTC TIMEOUT', `Using ${ltc_btc_rate}`);
         });
-    }
+}
 
-    function fetchBitcoinData() {
-      const URL = `https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=60&limit=360`;
+function fetchBitcoinData() {
+    const URL = `https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=60&limit=360`;
 
-      fetch(URL)
+    fetch(URL)
         .then(response => response.json())
         .then(data => {
-          btcData = data.data.ohlc.map(item => parseFloat(item.close));
-          maxPrice = Math.max(...btcData);
-          minPrice = Math.min(...btcData);
-          lastClosePrice = btcData[btcData.length - 1];
+            btcData = data.data.ohlc.map(item => parseFloat(item.close));
+            maxPrice = Math.max(...btcData);
+            minPrice = Math.min(...btcData);
+            lastClosePrice = btcData[btcData.length - 1];
         })
         .catch(error => console.error('Error fetching data:', error));
-    }
+}
 
-    function uploadCanvas() {
-      let xhr = new XMLHttpRequest();
-      xhr.open('POST', '/save', true);
-      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+function uploadCanvas() {
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/save', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
-      xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          console.log('Screenshot saved:', xhr.responseText);
+            console.log('Screenshot saved:', xhr.responseText);
         }
-      };
+    };
 
-      xhr.send('imgBase64=' + encodeURIComponent(dataURL));
-    } 
+    xhr.send('imgBase64=' + encodeURIComponent(dataURL));
+}
 
-    // Updates
-    setInterval(fetchBitcoinData, 10000);   // 30000 ms = 30 secs 
-    setInterval(fetchLitecoinData, 300000); // 300000 ms = 5 mins
-    setInterval(fetchWarData, 86400000);    // 86400000 ms = 24 hours
-    setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
-    setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
-    setInterval(fetchNews, 60000); // 60000 milliseconds = 1 min
-    setInterval(fetchWords, 7200000); // 7200000 ms = 2 hrs
+// Updates
+setInterval(fetchBitcoinData, 10000); // 30000 ms = 30 secs 
+setInterval(fetchLitecoinData, 300000); // 300000 ms = 5 mins
+setInterval(fetchWarData, 86400000); // 86400000 ms = 24 hours
+setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
+setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
+setInterval(fetchNews, 60000); // 60000 milliseconds = 1 min
+setInterval(fetchWords, 7200000); // 7200000 ms = 2 hrs
 
-    setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
+setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
 
-  </script>
+</script>
 </body>
 </html>
