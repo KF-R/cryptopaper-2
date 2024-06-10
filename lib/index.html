@@ -26,23 +26,24 @@ const TITLE = 'Cryptopaper';
 const WIN_W = 2200;
 const WIN_H = 1650;
 const CHART_TOP = 450;
-const CHART_BOTTOM = 1450;
-const MIN_CONTRAST = 155;
+const CHART_HEIGHT = 1000;
+const CHART_BOTTOM = CHART_TOP + CHART_HEIGHT;
+const MIN_CONTRAST = 175;
 const BLACK = [0, 0, 0];
 let white = [215, 215, 215]; // white can be adjusted for contrast
 
 let news = [];
-let newsTS = 0; // Timestamp of latest successful update
+let newsTS = 0; // Timestamp of latest successful update; as with all `...TS` variables
 
 let weather = '';
-let weatherTS = 0; // Timestamp of latest successful update
+let weatherTS = 0;
 
 let ltc_btc_rate = 0.0;
-let ltc_btc_rateTS = 0; // Timestamp of latest successful update
+let ltc_btc_rateTS = 0;
 
 let btcData = [];
-let maxPrice = 0,
-    minPrice = 0;
+let maxPrice = 0;
+let minPrice = 0;
 let lastClosePrice = 0;
 
 // Server constants
@@ -54,9 +55,9 @@ let IP_ADDR = '0.0.0.0';
 let dataURL; // Screenshot image data
 
 let rubData = [];
-let rubDataTS = 0; // Timestamp of latest successful update
+let rubDataTS = 0;
 let warData = [];
-let warDataTS = 0; // Timestamp of latest successful update
+let warDataTS = 0;
 
 let keywordList = ['ukraine', 'killed', 'putin'];
 let keywordListTS = 0; // Timestamp of latest successful update (currently unused)
@@ -115,11 +116,19 @@ function draw() {
     dataURL = canvas.toDataURL('image/png');
 }
 
+function keyReleased() {
+  if (keyCode === UP_ARROW) {
+    white = white.map(value => constrain(value + 20, MIN_CONTRAST, 255));
+  } else if (keyCode === DOWN_ARROW) {
+    white = white.map(value => constrain(value - 20, MIN_CONTRAST, 255));
+  }
+}
+
 function drawTimestamps() {
     let TSline = '';
 
     if (trim(uptime(warDataTS)) != '0m') {
-        TSline += 'δru:' + uptime(warDataTS);
+        TSline += 'Δru:' + uptime(warDataTS);
     }
     if (trim(uptime(rubDataTS)) != '0m') {
         TSline += 'rub:' + uptime(rubDataTS);
@@ -138,7 +147,7 @@ function drawTimestamps() {
     noStroke();
     fill(BLACK);
     textSize(24);
-    text(TSline, 1480, CHART_BOTTOM + 56);
+    text(TSline, 1500, CHART_BOTTOM + 56);
     pop();
 }
 
@@ -146,9 +155,9 @@ function drawExtras() {
     push();
     textAlign(CENTER);
     textSize(40);
-    text('Day', (width / 2) - 230, CHART_BOTTOM + 100);
+    text('Day', (width / 2) - 225, CHART_BOTTOM + 100);
     textSize(48);
-    text(warDays(), (width / 2) - 230, CHART_BOTTOM + 145);
+    text(warDays(), (width / 2) - 225, CHART_BOTTOM + 145);
     pop();
 
     image(tryzub, (width / 2) - 250, CHART_BOTTOM + 12, 45, 75);
@@ -156,16 +165,14 @@ function drawExtras() {
     if (warData.length == 0) return;
 
     // War Chart
-    let monthsListed = 6;
-
     push()
     stroke(BLACK);
+    strokeWeight(2);
     fill(white);
     rect(6, CHART_BOTTOM + 6, 400, 190);
 
     noFill();
-    stroke(BLACK);
-    strokeWeight(2);
+
     beginShape();
     for (let i = 0; i < warData.length - 1; i++) {
         let x = map(i, 0, warData.length, 8, 412, true);
@@ -173,31 +180,41 @@ function drawExtras() {
         vertex(x, y);
     }
     endShape();
-    let monthsX = map(warData.length - (monthsListed + 1), 0, warData.length, 8, 412);
 
     let x = map(warData.length - 1, 0, warData.length, 8, 412, true);
     let y = map(warData[warData.length - 1], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
 
     noStroke();
     fill(BLACK);
-    rect(monthsX, CHART_BOTTOM + 106, 1, 90); // line indicating months listed
-    circle(x, y, 11); // Current month, current figure
+    rect(x - 6, y, 6, 2); // Current month, current figure
+    rect(x, y, 1, height - y - 4);
 
     text(nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
     fontSize = 16;
     textSize(fontSize);
-    for (prevDays = monthsListed - 1; prevDays >= 0; prevDays--) {
-        text('' + getMonthName(month() - prevDays) + ': ' + nfc(warData[warData.length - 1 - prevDays]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevDays)));
+    for (prevMonths = 5; prevMonths > 0; prevMonths--) {
+        text(getMonthName(month() - prevMonths) + ': ' + nfc(warData[warData.length - 1 - prevMonths]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevMonths)));
     }
-    text(getMonthName(month() - monthsListed), monthsX - 32, CHART_BOTTOM + 180);
-
+    text(nfc(warData[warData.length - 1]), 336, y - 8);
+    if(day()>7) text(getMonthName(month()), 368, CHART_BOTTOM + 180);
+    
+    // Time axis
+    for (let i = 1; i <= 3; i++) {
+        const monthsOffset = 6 * i;
+        const dataIndex = warData.length - monthsOffset - 1;
+        const x = map(dataIndex, 0, warData.length, 8, 412);
+        const y = map(warData[dataIndex], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
+        rect(x, y, 1, height - y - 4);
+        text(getMonthName(month() - monthsOffset), x - 32, CHART_BOTTOM + 180);
+    }
 
     // BTCRUB chart
     stroke(BLACK);
-    strokeWeight(1);
+    strokeWeight(2);
     fill(white);
     rect(415, CHART_BOTTOM + 6, 400, 190);
     noFill();
+    strokeWeight(1);
     beginShape();
     for (let i = 0; i < rubData.length; i++) {
         let x = map(i, 0, rubData.length, 416, 814, true);
@@ -258,7 +275,7 @@ function fetchWarData() {
                 }
             }
             warDataTS = Math.floor(Date.now() / 1000);
-            console.log('warData updated:', warData);
+            // console.log('warData updated:', warData);
         })
         .catch(error => {
             console.error('Error fetching data:', error);
@@ -319,7 +336,7 @@ function drawVolatilityIndicator() {
     text(nf(volatility, 0, 2) + '%', (width / 2) + 90, height - 30);
 
     // Movement Indicator Box
-    let relPos = map(lastClosePrice, minPrice, maxPrice, 0, 192, true);
+    let relPos = map(lastClosePrice, minPrice, maxPrice, 0, 188, true);
     rect((width / 2) - 160, CHART_BOTTOM + 192 - relPos, 38, 6);
 
     let r = map(volatility, 0, 10, 0, 195, true);
@@ -328,6 +345,7 @@ function drawVolatilityIndicator() {
     pop();
 }
 
+// Formats big numbers for diamond hodlers
 function moonGuard(price) {
     if (price < 100000) {
         return nfc(price);
@@ -342,19 +360,18 @@ function moonGuard(price) {
 
 function drawBitcoinChart() {
     push();
-    translate(0, 0);
 
-    stroke(0);
+    stroke(BLACK);
     strokeWeight(3);
     fill(white);
-    rect(3, CHART_TOP, WIN_W - 6, CHART_BOTTOM - 450);
+    rect(3, CHART_TOP, WIN_W - 6, CHART_HEIGHT);
     strokeWeight(1);
     // Vertical grid
     for (let i = 1; i < 6; i += 1) {
         let x = map(i, 0, 6, 3, WIN_W - 6);
         line(x, CHART_TOP, x, CHART_BOTTOM); // Tick mark
     }
-    fill(0);
+    fill(BLACK);
 
     if (btcData.length === 0) return;
 
@@ -363,25 +380,26 @@ function drawBitcoinChart() {
     fill(white);
     textSize(208);
     textAlign(RIGHT);
-    text('$' + moonGuard(lastClosePrice + 100000) + '', WIN_W, 10); // Latest price
+    text('$' + moonGuard(lastClosePrice) + '', WIN_W, 10); // Latest price
 
     // Draw High/Low
     fill(0);
     textSize(120);
-    text('H:$' + moonGuard(maxPrice + 100000) + '', WIN_W, 218); // High
-    text('L:$' + moonGuard(minPrice + 100000) + '', WIN_W, 336); // High
+    text('H:$' + moonGuard(maxPrice) + '', WIN_W, 218); // High
+    text('L:$' + moonGuard(minPrice) + '', WIN_W, 336); // High
 
     // Plot data
     noFill();
     stroke(BLACK);
-    strokeWeight(2);
+    strokeWeight(3);
     beginShape();
     for (let i = 0; i < btcData.length; i++) {
         let x = map(i, 0, btcData.length - 1, 3, WIN_W - 6);
-        let y = map(btcData[i], minPrice, maxPrice, CHART_BOTTOM - 4, CHART_TOP + 2);
-        vertex(x, y);
+        let y = map(btcData[i], minPrice, maxPrice, 0, 990);
+        vertex(x, (CHART_HEIGHT - y) + CHART_TOP - 2);
     }
     endShape();
+
     pop();
 }
 
@@ -437,10 +455,11 @@ function drawNews() {
 }
 
 function drawStatus() {
+    let contrastLevel = 4 - (255 - white[0]) / 20;
     push();
     textSize(24);
     textAlign(LEFT);
-    text(LOCATION + ' ' + IP_ADDR, 1480, CHART_BOTTOM + 10);
+    text(LOCATION + '  ' + IP_ADDR + ' ' + contrastLevel, 1480, CHART_BOTTOM + 10);
     textAlign(RIGHT);
     text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
     textSize(16);
@@ -633,13 +652,14 @@ function uploadCanvas() {
 }
 
 // Updates
-setInterval(fetchBitcoinData, 10000); // 30000 ms = 30 secs 
+setInterval(fetchBitcoinData, 30000); // 30000 ms = 30 secs 
 setInterval(fetchLitecoinData, 300000); // 300000 ms = 5 mins
+setInterval(fetchNews, 60000); // 60000 milliseconds = 1 min
+
 setInterval(fetchWarData, 86400000); // 86400000 ms = 24 hours
 setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
-setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
-setInterval(fetchNews, 60000); // 60000 milliseconds = 1 min
 setInterval(fetchWords, 7200000); // 7200000 ms = 2 hrs
+setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
 
 setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
 
