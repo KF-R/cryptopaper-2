@@ -27,12 +27,13 @@
     const WIN_H = 1650;
     const CHART_TOP = 450;
     const CHART_BOTTOM = 1450;
-    const CHART_HEIGHT = CHART_BOTTOM - CHART_TOP;
     const MIN_CONTRAST = 155;
     const BLACK = [0, 0, 0];
-    let white = [220, 220, 220]; // white can be adjusted for contrast
+    let white = [215, 215, 215]; // white can be adjusted for contrast
 
     let news = [];
+    let newsTS = 0;  // Timestamp of latest successful update
+
 //     let weather = `     \\  /       Partly cloudy
 //    _ /"".-.     +14(13) °C     
 //      \\_(   ).   ↑ 9 km/h       
@@ -40,12 +41,16 @@
 //                 0.1 mm         
 // `;
     let weather = '';
+    let weatherTS = 0;  // Timestamp of latest successful update
+    
     let ltc_btc_rate = 0.0;
+    let ltc_btc_rateTS = 0; // Timestamp of latest successful update
 
     let btcData = [];
     let maxPrice = 0, minPrice = 0;
     let lastClosePrice = 0;
 
+    // Server constants
     let START_TIME = 0;
     let CURRENT_VERSION = 0;
     let LOCATION = '';
@@ -54,8 +59,12 @@
     let dataURL; // Screenshot image data
 
     let rubData = [];
+    let rubDataTS = 0; // Timestamp of latest successful update
     let warData = [];
+    let warDataTS = 0; // Timestamp of latest successful update
 
+    let keywordList = ['ukraine', 'killed', 'putin'];
+    let keywordListTS = 0; // Timestamp of latest successful update (currently unused)
 
     function preload() {
       font = loadFont('CNR.otf');
@@ -70,6 +79,7 @@
       textFont(font);
 
       fetchStatus();
+      fetchWords();
 
       fetchBitcoinData();
       fetchLitecoinData();
@@ -77,6 +87,8 @@
       fetchWarData();
       fetchBtcRubData();
       fetchWeather();
+
+      fetchNews();
 
     }
 
@@ -103,9 +115,38 @@
 
       drawExtras();
 
+      drawTimestamps();
+
       let canvas = document.querySelector('canvas');
       dataURL = canvas.toDataURL('image/png');
 
+    }
+
+    function drawTimestamps() {
+      let TSline = '';
+
+      if (trim(uptime(warDataTS)) != '0m') {
+        TSline += 'δru:' + uptime(warDataTS);
+      }
+      if (trim(uptime(rubDataTS)) != '0m') {
+        TSline += 'rub:' + uptime(rubDataTS);
+      }
+      if (trim(uptime(weatherTS)) != '0m') {
+        TSline += 'wtr:' + uptime(weatherTS);
+      }
+      if (trim(uptime(ltc_btc_rateTS)) != '0m') {
+        TSline += 'ltc:' + uptime(ltc_btc_rateTS);
+      }
+      if (trim(uptime(newsTS)) != '0m') {
+        TSline += 'nws:' + uptime(newsTS);
+      }
+
+      push();
+      noStroke();
+      fill(BLACK);
+      textSize(24);
+      text(TSline, 1480, CHART_BOTTOM + 56);
+      pop();
     }
 
     function drawExtras() {
@@ -122,6 +163,8 @@
       if (warData.length == 0) return;
 
       // War Chart
+      let monthsListed = 6;
+
       push()
       stroke(BLACK);
       fill(white);
@@ -131,20 +174,30 @@
       stroke(BLACK);
       strokeWeight(2);
       beginShape();
-      for (let i = 0; i < warData.length; i++) {
+      for (let i = 0; i < warData.length - 1; i++) {
         let x = map(i, 0, warData.length, 8, 412, true);
         let y = map(warData[i], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
         vertex(x, y);
       }
       endShape();
+      let monthsX = map(warData.length - (monthsListed + 1),0,warData.length, 8, 412);
+      
+      let x = map(warData.length - 1, 0, warData.length, 8, 412, true);
+      let y = map(warData[warData.length - 1], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
+      
       noStroke();
       fill(BLACK);
+      rect(monthsX, CHART_BOTTOM + 106, 1, 90); // line indicating months listed
+      circle(x,y,11); // Current month, current figure
+
       text(nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
       fontSize = 16;
       textSize(fontSize);
-      for (prevDays = 5; prevDays >= 0; prevDays--) {
+      for (prevDays = monthsListed - 1; prevDays >= 0; prevDays--) {
         text(''+ getMonthName(month() - prevDays) + ': ' + nfc(warData[warData.length - 1 - prevDays]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevDays)));
       }
+      text(getMonthName(month() - monthsListed), monthsX - 32, CHART_BOTTOM + 180);
+
 
       // BTCRUB chart
       stroke(BLACK);
@@ -186,7 +239,9 @@
             if (xhr.readyState === 4) { // 4 means the request is done
                 if (xhr.status === 200) { // 200 means a successful return
                     weather = xhr.responseText;
-                    console.log(weather); // For debugging purposes
+                    weatherTS = Math.floor(Date.now() / 1000);
+                    // console.log(weather); // For debugging purposes
+                    // console.log(weatherTS);
                 } else {
                     console.error('Error fetching weather data:', xhr.status);
                 }
@@ -210,6 +265,7 @@
                     warData.push(data.data[date].personnel);
                 }
             }
+            warDataTS = Math.floor(Date.now() / 1000);
             console.log('warData updated:', warData);
         })
         .catch(error => {
@@ -233,9 +289,10 @@
       fill(white);
       fontSize = 132;
       textSize(fontSize);
-      text('LTC:' + nf(ltc_btc_rate,0,4),width - 724, height - fontSize + 16);
+      textAlign(RIGHT);
+      text('LTC:' + nf(ltc_btc_rate,0,4),width, height - fontSize + 16);
       textSize(32);
-      text(' $' + nf(ltc_btc_rate * lastClosePrice,0,2), width - 144, height - 152);
+      text(' $' + nf(ltc_btc_rate * lastClosePrice,0,2) + ' ', width - 4, height - 154);
       pop();
     }
 
@@ -263,19 +320,31 @@
       push();
       noStroke();
       fill(BLACK);
-      textSize(36);
+      textSize(32);
       text('$' + nfc(maxPrice - minPrice), (width / 2) + 90, CHART_BOTTOM + 5);
 
-      text( nf(volatility, 0, 2) + '%', (width / 2) + 90, height - 32);
+      text( nf(volatility, 0, 2) + '%', (width / 2) + 90, height - 30);
 
       // Movement Indicator Box
-      let relPos = map(lastClosePrice, minPrice, maxPrice, 192, 8, true);
-      rect( (width / 2 - 160), CHART_BOTTOM + 5 + relPos, 38, 6);
+      let relPos = map(lastClosePrice, minPrice, maxPrice, 0, 192, true);
+      rect( (width / 2) - 160, CHART_BOTTOM + 192 - relPos, 38, 6);
 
       let r = map(volatility, 0, 10, 0, 195, true);
       circle(width / 2, CHART_BOTTOM + 101, r);
 
       pop();
+    }
+
+    function moonGuard(price) {
+      if (price < 100000) {
+        return nfc(price);
+      } else {
+        if (price < 1000000) {
+          return nf(price / 1000, 0, 1) + 'k';
+        } else {
+          return nf(price / 1000000, 0, 3) + 'm';
+        }
+      }
     }
 
     function drawBitcoinChart() {
@@ -301,13 +370,13 @@
       fill(white);
       textSize(208);
       textAlign(RIGHT);
-      text('$' + nfc(lastClosePrice) + '', WIN_W + 3, 10); //  Latest price
+      text('$' + moonGuard(lastClosePrice + 100000) + '', WIN_W, 10); //  Latest price
 
       // Draw High/Low
       fill(0);
       textSize(120);
-      text('H:$' + nfc(maxPrice) + '', WIN_W, 218); //  High
-      text('L:$' + nfc(minPrice) + '', WIN_W, 336); //  High
+      text('H:$' + moonGuard(maxPrice + 100000) + '', WIN_W, 218); //  High
+      text('L:$' + moonGuard(minPrice + 100000) + '', WIN_W, 336); //  High
 
       // Plot data
       noFill();
@@ -347,7 +416,7 @@
       fill(white);
       textSize(224);
       let currentTime = nf(hour(), 2) + ':' + nf(minute(), 2); // + ':' + nf(second(), 2);
-      text(currentTime, 96 + 3, 3 + 3);
+      text(currentTime, 95, 10);
       pop();
     }
 
@@ -362,7 +431,16 @@
           newsItem = news[i];
         }
 
-        text(newsItem, 3, 218 + (i * (headlineSize + 1)));
+        if (containsKeyword(news[i])  && (second() % 2 == 0)) {
+          fill(BLACK);
+          rect(0, 216 + (i * (headlineSize + 1)), 1600, headlineSize + 2);
+          fill(white);
+        } else {
+          fill(white);
+          rect(0, 217 + (i * (headlineSize + 1)), 1600, headlineSize + 2);
+          fill(BLACK);
+        }
+        text(newsItem, 2, 218 + (i * (headlineSize + 1)));
       }
       pop();
     }
@@ -370,13 +448,19 @@
     function drawStatus(){
       push();
       textSize(24);
-      textAlign(CENTER);
-      text(LOCATION + '   ' + IP_ADDR, width - 520, CHART_BOTTOM + 10);
+      textAlign(LEFT);
+      text(LOCATION + '   ' + IP_ADDR, 1480, CHART_BOTTOM + 10);
       textAlign(RIGHT);
       text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
       textSize(16);
       text('v' + CURRENT_VERSION, (width / 2) + 360, height - 18 );
       pop();
+    }
+
+    // Checks if a string contains any substrings from wordlist (case-insensitive)
+    function containsKeyword(str) {
+      const lowerCaseStr = str.toLowerCase();
+      return keywordList.some(word => lowerCaseStr.includes(word.toLowerCase()));
     }
 
     function weekday(day, month, year) {
@@ -431,8 +515,8 @@
         return result.trim() + '  ';
     }    
 
-    function fetchNews(headlineCount = 4, timeout = 5000) {
-      const url = 'https://127.0.0.1:5000/fetch_news'; // URL of the proxy server
+    function fetchWords() {
+      const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
 
       return fetch(url)
           .then(response => {
@@ -442,7 +526,30 @@
               return response.json();
           })
           .then(data => {
-              return data.slice(0, headlineCount);
+              console.log('Keywords updated:', data);
+              keywordList = data;
+              keywordListTS = Math.floor(Date.now() / 1000);
+              return;
+          })
+          .catch(error => {
+              console.error('Fetch error:', error);
+              return          });
+      }
+
+    function fetchNews(headlineCount = 4, timeout = 5000) {
+      const url = 'https://127.0.0.1:5000/fetch_news'; 
+
+      return fetch(url)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+              return response.json();
+          })
+          .then(data => {
+              news = data.slice(0, headlineCount);
+              newsTS = Math.floor(Date.now() / 1000);
+              return;
           })
           .catch(error => {
               console.error('Fetch error:', error);
@@ -451,7 +558,7 @@
       }
 
     function fetchStatus() {
-      const url = 'https://127.0.0.1:5000/status'; // URL of the proxy server
+      const url = 'https://127.0.0.1:5000/status'; 
 
       return fetch(url)
           .then(response => {
@@ -465,28 +572,12 @@
               CURRENT_VERSION = data['version'];
               IP_ADDR = data['ip_addr'];
               LOCATION = data['location'];
-              return
+              return;
           })
           .catch(error => {
               console.error('Fetch error:', error);
               return          });
       }
-
-    function startFetchingHeadlines(interval = 60000) {
-      // Fetch headlines immediately
-      fetchNews().then(headlines => {
-          news = headlines;
-          // console.log(news);
-      });
-
-      // Set interval to fetch headlines (every 60 seconds by default)
-      setInterval(() => {
-          fetchNews().then(headlines => {
-              news = headlines;
-              // console.log(news);
-          });
-      }, interval);
-    }
 
     function fetchBtcRubData() {
       fetch('https://api.coindesk.com/v1/bpi/historical/close.json?currency=RUB&start=2019-01-01&end=2054-01-01')
@@ -500,6 +591,7 @@
                     rubData.push(data.bpi[date]);
                 }
             }
+            rubDataTS = Math.floor(Date.now() / 1000);
             console.log('rubData updated:', rubData);
         })
         .catch(error => {
@@ -512,6 +604,7 @@
         .then(response => response.json())
         .then(data => {
             ltc_btc_rate = parseFloat(data['last']);
+            ltc_btc_rateTS = Math.floor(Date.now() / 1000);
         })
         .catch(error => {
             console.log('LTC TIMEOUT', `Using ${ltc_btc_rate}`);
@@ -552,7 +645,8 @@
     setInterval(fetchWarData, 86400000);    // 86400000 ms = 24 hours
     setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
     setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
-    startFetchingHeadlines();
+    setInterval(fetchNews, 60000); // 60000 milliseconds = 1 min
+    setInterval(fetchWords, 7200000); // 7200000 ms = 2 hrs
 
     setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
 
