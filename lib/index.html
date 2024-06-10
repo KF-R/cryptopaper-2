@@ -528,7 +528,7 @@ function fetchWords() {
         });
 }
 
-function fetchNews(headlineCount = 4, timeout = 5000) {
+function fetchNews(headlineCount = 4) {
     const url = 'https://127.0.0.1:5000/fetch_news';
 
     return fetch(url)
