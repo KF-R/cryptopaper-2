@@ -128,25 +128,28 @@ function drawTimestamps() {
     let TSline = '';
 
     if (trim(uptime(warDataTS)) != '0m') {
-        TSline += 'Δru:' + uptime(warDataTS);
+        // TSline += 'Δru:' + uptime(warDataTS);
+        TSline += '\u{2620} ' + uptime(warDataTS) + '   ';
     }
     if (trim(uptime(rubDataTS)) != '0m') {
-        TSline += 'rub:' + uptime(rubDataTS);
+        TSline += '\u{20BD} ' + uptime(rubDataTS) + '   ';
     }
     if (trim(uptime(weatherTS)) != '0m') {
-        TSline += 'wtr:' + uptime(weatherTS);
+        // TSline += 'wtr:' + uptime(weatherTS);
+        TSline += '\u{2602} ' + uptime(weatherTS) + '   ';
     }
     if (trim(uptime(ltc_btc_rateTS)) != '0m') {
-        TSline += 'ltc:' + uptime(ltc_btc_rateTS);
+        TSline += '\u{0141} ' + uptime(ltc_btc_rateTS) + '   ';
     }
     if (trim(uptime(newsTS)) != '0m') {
-        TSline += 'nws:' + uptime(newsTS);
+        TSline += '\u{26A0} ' + uptime(newsTS) + '   ';
     }
 
     push();
     noStroke();
     fill(BLACK);
     textSize(24);
+    textFont('Ubuntu Mono');
     text(TSline, 1500, CHART_BOTTOM + 56);
     pop();
 }
@@ -188,15 +191,17 @@ function drawExtras() {
     fill(BLACK);
     rect(x - 6, y, 6, 2); // Current month, current figure
     rect(x, y, 1, height - y - 4);
+    textFont('Ubuntu Mono');
 
-    text(nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
-    fontSize = 16;
+    text('\u{2620} ' + nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
+    fontSize = 18;
+
     textSize(fontSize);
     for (prevMonths = 5; prevMonths > 0; prevMonths--) {
-        text(getMonthName(month() - prevMonths) + ': ' + nfc(warData[warData.length - 1 - prevMonths]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevMonths)));
+        text(getMonthName(month() - prevMonths) + ' ' + nfc(warData[warData.length - 1 - prevMonths]), 10, CHART_BOTTOM + 24 + ((2 + fontSize) * (6 - prevMonths)));
     }
     text(nfc(warData[warData.length - 1]), 336, y - 8);
-    if(day()>7) text(getMonthName(month()), 368, CHART_BOTTOM + 180);
+    if(day()>7) text(getMonthName(month()), 368, CHART_BOTTOM + 176);
     
     // Time axis
     for (let i = 1; i <= 3; i++) {
@@ -205,7 +210,7 @@ function drawExtras() {
         const x = map(dataIndex, 0, warData.length, 8, 412);
         const y = map(warData[dataIndex], Math.min(...warData), Math.max(...warData), CHART_BOTTOM + 194, CHART_BOTTOM + 12, true);
         rect(x, y, 1, height - y - 4);
-        text(getMonthName(month() - monthsOffset), x - 32, CHART_BOTTOM + 180);
+        text(getMonthName(month() - monthsOffset), x - 32, CHART_BOTTOM + 176);
     }
 
     // BTCRUB chart
@@ -224,11 +229,12 @@ function drawExtras() {
     endShape();
     noStroke();
     fill(BLACK);
-    textSize(24);
-
-    text(nfc(nf(rubData[rubData.length - 1], 0, 0)) + 'r', 418, CHART_BOTTOM + 10);
-    textSize(16);
-    text('H: ' + nfc(nf(Math.max(...rubData), 0, 0)) + 'r', 420, CHART_BOTTOM + 36)
+    textSize(28);
+    textFont('Ubuntu Mono');
+    text(nfc(nf(rubData[rubData.length - 1], 0, 0)) + '', 418, CHART_BOTTOM + 10);
+    textSize(20);
+    text('H: ' + nfc(nf(Math.max(...rubData), 0, 0)) + '', 420, CHART_BOTTOM + 40)
+    text('\u{20BD} / \u{20BF}', 420, CHART_BOTTOM + 64);
     pop();
 
     push();
@@ -455,11 +461,13 @@ function drawNews() {
 }
 
 function drawStatus() {
-    let contrastLevel = 4 - (255 - white[0]) / 20;
+    let contrastLevel = 5 - (255 - white[0]) / 20;
+    if (contrastLevel == 5) contrastLevel = ''; else contrastLevel = '\u{25D1}'.repeat(5 - contrastLevel);
     push();
     textSize(24);
     textAlign(LEFT);
-    text(LOCATION + '  ' + IP_ADDR + ' ' + contrastLevel, 1480, CHART_BOTTOM + 10);
+    textFont('Ubuntu Mono');
+    text(LOCATION + '   ' + IP_ADDR + '   ' + contrastLevel, 1480, CHART_BOTTOM + 10);
     textAlign(RIGHT);
     text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
     textSize(16);
@@ -536,7 +544,7 @@ function fetchWords() {
             return response.json();
         })
         .then(data => {
-            console.log('Keywords updated:', data);
+            console.log('Keywords updated: [' + data + ']');
             keywordList = data;
             keywordListTS = Math.floor(Date.now() / 1000);
             return;
@@ -604,7 +612,7 @@ function fetchBtcRubData() {
                 }
             }
             rubDataTS = Math.floor(Date.now() / 1000);
-            console.log('rubData updated:', rubData);
+            // console.log('rubData updated:', rubData);
         })
         .catch(error => {
             console.error('Error fetching data:', error);
