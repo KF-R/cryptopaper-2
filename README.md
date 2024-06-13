@@ -59,19 +59,13 @@ Browse to the local URL, by default: https://127.0.0.1:5000/
 
 - Watch Words
 
-    <b>lib/watch-words.txt</b> contains an editable list of newline-separated search strings.
-    
-    Any headline containing any of these strings will flash (toggling inverted status every other second).
+    `lib/watch-words.txt` contains an editable list of newline-separated search strings.<br/>Any headline containing any of these strings will flash (toggling inverted status every other second).
     
 - Options
 
-    The weather locale is set by editing the `LOCATION` constant in `cryptopaper-2.py`.
-    This string is fed to the most excellent [wttr.in](https://github.com/chubin/wttr.in), so any location strings valid there should also work here.
-    You can also adjust the server `PORT` here, if necessary.
+    The weather locale is set by editing the `LOCATION` constant in `cryptopaper-2.py`. <br/>This string is fed to the most excellent [wttr.in](https://github.com/chubin/wttr.in), so any location strings valid there should also work here.<br/>You can also adjust the server `PORT` here, if necessary.
 
 - Sources
 
-    Headlines are fetched from BBC World News (https://www.bbc.com/news/world).
-    BTC and LTC data pulled from Bitstamp (https://www.bitstamp.net).
-    Extra data pulled from https://russian-casualties.in.ua/ and Coindesk (https://www.coindesk.com).
+    Headlines are fetched from BBC World News (https://www.bbc.com/news/world).<br/>BTC and LTC data pulled from Bitstamp (https://www.bitstamp.net).<br/>Extra data pulled from https://russian-casualties.in.ua/ and Coindesk (https://www.coindesk.com).
     
