@@ -1,7 +1,7 @@
 ## cryptopaper-2  &nbsp;&nbsp;  :chart_with_upwards_trend: ![#StandWithUkraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraineFlat.svg) :newspaper:
 <img src="https://github.com/KF-R/cryptopaper-2/assets/6677966/a40c3ae7-8288-450b-a5f6-7d01a316a1cc.png" width="50%" height="50%" align="right" />
 
-**A BTC/LTC/USD dashboard with scraped headlines, topical statistics and data from on-going global crises.**
+**An updated BTC/LTC/USD dashboard with scraped headlines, topical statistics and data from on-going global crises.**
 
 Designed with high-visibility and at-a-glance updates in mind.  Intended for 2200x1650* e-paper devices such as the Boox Mira.  Well suited to low power instrumentation.
 
@@ -28,7 +28,7 @@ Designed with high-visibility and at-a-glance updates in mind.  Intended for 220
 - Time since last update for each dataset (_if > 1 minute; else hidden_)
 - Current LTC value in USD (_calculated from latest LTCBTC and BTC spot values_)
 - Version number
-- Current LTCTBTC rate
+- Current LTCBTC rate
 
 <br/>
 
