@@ -18,7 +18,7 @@ Kerch
 killed
 Kremlin
 Kyiv
-Mariupol
+launch
 missile
 Moscow
 NAFO
@@ -35,3 +35,5 @@ shot
 siren
 submarine
 troop
+Ukraine
+Zelens
