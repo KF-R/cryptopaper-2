@@ -1,23 +1,18 @@
 ## cryptopaper-2  &nbsp;&nbsp;  :chart_with_upwards_trend: ![#StandWithUkraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraineFlat.svg) :newspaper:
-<img src="https://user-images.githubusercontent.com/6677966/235366423-d989484c-08c7-4d56-8ca0-e36e3fbf1434.png" width="50%" height="50%" align="right" />
-![cryptopaper-2-sc0](https://github.com/KF-R/cryptopaper-2/assets/6677966/a40c3ae7-8288-450b-a5f6-7d01a316a1cc)
+<img src="https://github.com/KF-R/cryptopaper-2/assets/6677966/a40c3ae7-8288-450b-a5f6-7d01a316a1cc.png" width="50%" height="50%" align="right" />
 
 **A BTC/LTC/USD dashboard with scraped headlines, topical statistics and data from on-going global crises.**
 
 Designed with high-visibility and at-a-glance updates in mind.  Intended for 2200x1650* e-paper devices such as the Boox Mira.  Well suited to low power instrumentation.
 
-<br/>
 **&lt;UP&gt;** and **&lt;DOWN&gt;** keys will adjust contrast
 
 ### From left to right from top to bottom:
 - Time, Date, BTC/USD Spot
 - Headlines from BBC world news*
-- BTC/USD high and low during the last six hours**
-- Main BTC/USD chart for the last six hours.**
-- Extra charts and data from world events
-
-    Currently shows 
-  
+- BTC/USD high and low during the last six hours
+- Main BTC/USD chart for the last six hours
+- Extra charts and data from world events (Currently: monthly invaders "_knocked out cold_" and BTCRUB)
 - Volatility Indicator
 
     The marker in the vertical box indicates level of current spot price relative to high/low.
@@ -30,14 +25,12 @@ Designed with high-visibility and at-a-glance updates in mind.  Intended for 220
   
 - Weather for specified location
 - Location, IP address, contrast setting, uptime
-- Time since last update for each dataset
-- Current LTC value in USD (calculated from latest LTCBTC and BTC spot values)
+- Time since last update for each dataset (_if > 1 minute; else hidden_)
+- Current LTC value in USD (_calculated from latest LTCBTC and BTC spot values_)
 - Version number
 - Current LTCTBTC rate
 
-<img src="https://user-images.githubusercontent.com/6677966/234790110-400add24-bf82-4109-b8a9-505b3fcef9c7.png" width="20%" height="20%" align="right" />
-
-<br/><br/>
+<br/>
 
 \* _Headlines will flash (alternating inverted state) if they match any of a set of words defined in lib/watch-words.txt._
 
@@ -56,6 +49,10 @@ Optionally, if you would like to run it directly on linux or macs:
 
 Now you can run it from the command line with ```./cryptopaper```.
 
+### Usage:
+
+Browse to the local URL, by default: https://127.0.0.1:5000/
+
 ---
 
 ### Customizations:
@@ -70,6 +67,7 @@ Now you can run it from the command line with ```./cryptopaper```.
 
     The weather locale is set by editing the `LOCATION` constant in `cryptopaper-2.py`.
     This string is fed to the most excellent [wttr.in](https://github.com/chubin/wttr.in), so any location strings valid there should also work here.
+    You can also adjust the server `PORT` here, if necessary.
 
 - Sources
 
