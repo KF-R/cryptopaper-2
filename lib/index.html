@@ -510,6 +510,8 @@ function getOrdinalString(number) {
 }
 
 function uptime(unixTimestamp) {
+    if (unixTimestamp == 0) return '!';
+
     const now = new Date();
     const then = new Date(unixTimestamp * 1000); // Convert to milliseconds
     const diffInSeconds = Math.floor((now - then) / 1000);
