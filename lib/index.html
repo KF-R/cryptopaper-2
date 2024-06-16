@@ -379,9 +379,9 @@ function drawBitcoinChart() {
     strokeWeight(3);
     beginShape();
     for (let i = 0; i < btcData.length; i++) {
-        let x = map(i, 0, btcData.length - 1, 3, WIN_W - 6);
-        let y = map(btcData[i], minPrice, maxPrice, 0, CHART_HEIGHT  - 16);
-        vertex(x, (CHART_HEIGHT - y) + CHART_TOP - 4);
+        let x = map(i, 0, btcData.length - 1, 0, WIN_W - 6);
+        let y = map(btcData[i], minPrice, maxPrice, 0, CHART_HEIGHT  - 18);
+        vertex(x + 3, (CHART_HEIGHT - y) + CHART_TOP - 9);
     }
     endShape();
 
