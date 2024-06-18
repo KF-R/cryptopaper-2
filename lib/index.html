@@ -538,7 +538,7 @@ function uptime(unixTimestamp) {
 }
 
 function fetchWords() {
-    const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
+    const url = '/words'; // URL of the proxy server
 
     return fetch(url)
         .then(response => {
@@ -560,7 +560,7 @@ function fetchWords() {
 }
 
 function fetchNews(headlineCount = 4) {
-    const url = 'https://127.0.0.1:5000/fetch_news';
+    const url = '/fetch_news';
 
     return fetch(url)
         .then(response => {
@@ -581,7 +581,7 @@ function fetchNews(headlineCount = 4) {
 }
 
 function fetchStatus() {
-    const url = 'https://127.0.0.1:5000/status';
+    const url = '/status';
 
     return fetch(url)
         .then(response => {
