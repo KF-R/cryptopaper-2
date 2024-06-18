@@ -5,7 +5,9 @@
 
 Designed with high-visibility and at-a-glance updates in mind.  Intended for 2200x1650* e-paper devices such as the Boox Mira.  Well suited to low power instrumentation.
 
-**&lt;UP&gt;** and **&lt;DOWN&gt;** keys will adjust contrast
+**&lt;UP&gt;** and **&lt;DOWN&gt;** keys will adjust contrast.
+
+The **O** key will present the _Options_ interface for editing watch words and changing the locale.
 
 ### From left to right from top to bottom:
 - Time, Date, BTC/USD Spot
