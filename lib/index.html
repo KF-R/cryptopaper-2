@@ -121,6 +121,8 @@ function keyReleased() {
     white = white.map(value => constrain(value + 20, MIN_CONTRAST, 255));
   } else if (keyCode === DOWN_ARROW) {
     white = white.map(value => constrain(value - 20, MIN_CONTRAST, 255));
+  } else if (keyCode == 79) {   // 'o'
+    window.location.href = '/options';
   }
 }
 
@@ -671,7 +673,9 @@ setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
 setInterval(fetchWords, 7200000); // 7200000 ms = 2 hrs
 setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
 
-setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
+// setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
+
+
 
 </script>
 </body>

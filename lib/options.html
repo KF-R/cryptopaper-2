@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{status}}</title>
+    <script>
+        function fetchWords() {
+            const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
+
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    document.getElementById('watch_words').value = data.join("\n");
+                    return;
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    return;
+                });
+        }
+
+        async function fetchOptions() {
+            const response = await fetch('/status');
+            const data = await response.json();
+
+            if (data.error) {
+                document.getElementById('message').innerText = data.error;
+            } else {
+                document.getElementById('location').value = data.location;
+                // document.getElementById('threshold').value = data.threshold;
+            }
+        }
+
+        async function saveWatchWords() {
+            const text = document.getElementById('watch_words').value;
+
+            let response = await fetch('/save_watch_words', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `text=${encodeURIComponent(text)}`
+            });
+
+            let data = await response.json();
+
+            if (data.error) {
+                document.getElementById('message').innerText = data.error;
+            } else {
+                document.getElementById('message').innerText = 'Watch Words saved successfully.';
+                
+                // Reload the content of the watch_words textarea
+                fetchWords();
+            }
+        }
+        
+      </script>
+    <style>
+
+        body {
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: small;
+            width: 240px;
+            background-color: #000;
+            color: #fff;
+            margin-left: 4px;
+        }
+
+        div {
+            border: 1px solid #fff;
+            border-radius: 3%;
+            padding: 8px;
+            margin-top: 0px;
+            margin-bottom: 8px;
+        }
+
+        label {
+            font-style: italic;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 4px 8px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #fff;
+            box-sizing: border-box;
+            background-color: #000;
+            color: #fff;
+            resize: none;
+        }
+
+        button {
+            background-color: #888;
+            color: #000;
+            padding: 8px 8px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #fff;
+        }
+
+        button:active {
+            background-color: #555;
+            color: #fff;
+        }
+
+        button:disabled {
+            background-color: #333;
+            color: #999;
+            cursor: default;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="message" style="font-size:smaller;border-radius: 0px; margin-top: 0px;">{{status}}</div>
+
+    <div id="watch-words">
+        <label for="watch_words">Watch Words: </label>
+        <textarea id="watch_words" rows="24" cols="70"></textarea>
+        <button onclick="saveWatchWords();">Update Watch Words</button>
+    </div>
+
+    <div id="options">
+        <label for="location">wttr.in locale: </label><input id="location" type="text" placeholder="Enter location" style="width:96px;">
+        <button id="updateButton">Update Options</button>
+    </div>
+
+    <div id="controls" style="border-radius: 0; border-style: dashed; margin-top: 16px;">
+        <button onclick="window.location.href='/'">Back</button>
+    </div>
+
+    <script>fetchWords(); fetchOptions();</script>
+
+    <script>
+        document.getElementById('updateButton').onclick = function() {
+            const locationValue = document.getElementById('location').value;
+
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'location=' + encodeURIComponent(locationValue)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(html => {
+                document.open();
+                document.write(html);
+                document.close();
+                // Update the browser URL without reloading the page
+                window.history.pushState({}, '', '/');
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+        };
+    </script>
+
+</body>
+</html>
