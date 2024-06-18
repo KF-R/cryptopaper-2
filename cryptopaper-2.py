@@ -11,10 +11,10 @@ import socket                                   # For confirming ip address
 import base64                                   # For parsing image uploads
 
 PORT = 5000
-DEFAULT_LOCATION = 'Toronto'
-location = DEFAULT_LOCATION
+DEFAULT_LOCALE = 'Toronto'
+locale = DEFAULT_LOCALE
 
-TITLE, VERSION = 'Cryptopaper', '2.0.1'
+TITLE, VERSION = 'Cryptopaper', '2.0.2'
 LIBDIR = 'lib/'
 T_START = int(time.time())
 OPTIONS_FILE = 'options.txt'
@@ -23,15 +23,15 @@ KEYWORDS_FILE = 'watch-words.txt'
 app = Flask(__name__, template_folder=LIBDIR)
 CORS(app)                                       # Enable CORS for all routes
 
-def read_location():
-    global location
+def read_locale():
+    global locale
     try:
         with open(os.path.join(LIBDIR, OPTIONS_FILE), 'r') as file:
-            location = file.read().lstrip().rstrip()
-            print_log(f"Using location: `{location}`")
+            locale = file.read().lstrip().rstrip()
+            print_log(f"Using locale: `{locale}`")
     except:
-        location = DEFAULT_LOCATION
-        print_log(f"Using DEFAULT location (`{location}`)")
+        locale = DEFAULT_LOCALE
+        print_log(f"Using DEFAULT locale (`{locale}`)")
 
 def print_log(log_string = '',log_to_file=True, noStdOut = False):
     LOG_FILENAME = sys.argv[0].split('.')[0] + '.log'
@@ -68,20 +68,20 @@ def sanitize_watch_words(watch_words: str):
     sanitized_lines = [re.sub(r'\W+', '', line) for line in lines if line.strip() != '']
     return '\n'.join(sorted(sanitized_lines, key=str.lower))
 
-def sanitize_location(location: str):
-    return ''.join(ch for ch in location if ch.isprintable())    
+def sanitize_locale(locale: str):
+    return ''.join(ch for ch in locale if ch.isprintable())    
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global location
-    if request.method == 'POST' and 'location' in request.form:
-        location = sanitize_location(request.form['location'])
+    global locale
+    if request.method == 'POST' and 'locale' in request.form:
+        locale = sanitize_locale(request.form['locale'])
         try:
             with open(os.path.join(LIBDIR, OPTIONS_FILE), 'w') as file:
-                file.write(location)        
-            print_log(f'{OPTIONS_FILE} (location) updated.')
+                file.write(locale)        
+            print_log(f'{OPTIONS_FILE} (locale) updated.')
         except:
-            print_log('Location not updated.')
+            print_log('Locale not updated.')
     return send_from_directory(LIBDIR, 'index.html')
 
 @app.route('/words', methods=['GET'])
@@ -104,7 +104,7 @@ def status():
         'version': VERSION,
         'start_time': T_START,
         'ip_addr': ip_address(),
-        'location': location
+        'locale': locale
     }
     return jsonify(statusData)
 
@@ -124,7 +124,7 @@ def save_canvas():
 def options():
     system_name = os.uname().nodename
     server_time = time.strftime("%m/%d/%y  %H:%M:%S", time.localtime(time.time()))
-    return render_template('options.html', status = f'{system_name} :: {server_time}')
+    return render_template('options.html', status = f'{system_name} :: {server_time}', locale = locale)
 
 @app.route('/save_watch_words', methods=['POST'])
 def save_watch_words():
@@ -187,5 +187,5 @@ def fetch_bbc_news():
 
 if __name__ == '__main__':
     print_log(f"v{VERSION}: Initialising...")
-    read_location()
+    read_locale()
     app.run(debug=True, host='0.0.0.0', port=PORT, ssl_context='adhoc')

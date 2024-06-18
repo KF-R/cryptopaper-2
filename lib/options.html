@@ -2,64 +2,6 @@
 <html>
 <head>
     <title>{{status}}</title>
-    <script>
-        function fetchWords() {
-            const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
-
-            return fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(data);
-                    document.getElementById('watch_words').value = data.join("\n");
-                    return;
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    return;
-                });
-        }
-
-        async function fetchOptions() {
-            const response = await fetch('/status');
-            const data = await response.json();
-
-            if (data.error) {
-                document.getElementById('message').innerText = data.error;
-            } else {
-                document.getElementById('location').value = data.location;
-                // document.getElementById('threshold').value = data.threshold;
-            }
-        }
-
-        async function saveWatchWords() {
-            const text = document.getElementById('watch_words').value;
-
-            let response = await fetch('/save_watch_words', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `text=${encodeURIComponent(text)}`
-            });
-
-            let data = await response.json();
-
-            if (data.error) {
-                document.getElementById('message').innerText = data.error;
-            } else {
-                document.getElementById('message').innerText = 'Watch Words saved successfully.';
-                
-                // Reload the content of the watch_words textarea
-                fetchWords();
-            }
-        }
-        
-      </script>
     <style>
 
         body {
@@ -130,33 +72,34 @@
 <body>
     <div id="message" style="font-size:smaller;border-radius: 0px; margin-top: 0px;">{{status}}</div>
 
-    <div id="watch-words">
+    <div id="div-watch-words">
         <label for="watch_words">Watch Words: </label>
-        <textarea id="watch_words" rows="24" cols="70"></textarea>
+        <textarea id="watch_words" rows="32" cols="70"></textarea>
         <button onclick="saveWatchWords();">Update Watch Words</button>
+        <button onclick="window.location.href='/'">Done</button>
     </div>
 
-    <div id="options">
-        <label for="location">wttr.in locale: </label><input id="location" type="text" placeholder="Enter location" style="width:96px;">
-        <button id="updateButton">Update Options</button>
+    <div id="div-locale">
+        <label for="locale">wttr.in locale: </label><input id="locale" type="text" placeholder="Enter locale" style="width:96px;">
+        <button id="updateButton">Update Locale</button>
     </div>
-
-    <div id="controls" style="border-radius: 0; border-style: dashed; margin-top: 16px;">
-        <button onclick="window.location.href='/'">Back</button>
-    </div>
-
-    <script>fetchWords(); fetchOptions();</script>
 
     <script>
+
+        var locale = "{{locale}}";
+        document.getElementById('locale').value = locale;
+
+        fetchWords(); 
+
         document.getElementById('updateButton').onclick = function() {
-            const locationValue = document.getElementById('location').value;
+            const localeValue = document.getElementById('locale').value;
 
             fetch('/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: 'location=' + encodeURIComponent(locationValue)
+                body: 'locale=' + encodeURIComponent(localeValue)
             })
             .then(response => {
                 if (response.ok) {
@@ -168,13 +111,58 @@
                 document.open();
                 document.write(html);
                 document.close();
-                // Update the browser URL without reloading the page
+                // Remain at index URL
                 window.history.pushState({}, '', '/');
             })
             .catch(error => {
                 console.error('There has been a problem with your fetch operation:', error);
             });
         };
+
+        async function fetchWords() {
+            const url = 'https://127.0.0.1:5000/words'; // URL of the proxy server
+
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // console.log(data);
+                    document.getElementById('watch_words').value = data.join("\n");
+                    return;
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    return;
+                });
+        }
+
+        async function saveWatchWords() {
+            const text = document.getElementById('watch_words').value;
+
+            let response = await fetch('/save_watch_words', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `text=${encodeURIComponent(text)}`
+            });
+
+            let data = await response.json();
+
+            if (data.error) {
+                document.getElementById('message').innerText = data.error;
+            } else {
+                document.getElementById('message').innerText = 'Watch Words saved successfully.';
+                
+                // Reload the content of the watch_words textarea
+                fetchWords();
+            }
+        }
+
     </script>
 
 </body>
