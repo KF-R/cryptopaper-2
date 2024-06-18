@@ -13,7 +13,7 @@ PORT = 5000
 DEFAULT_LOCALE = 'Toronto'
 locale = DEFAULT_LOCALE
 
-TITLE, VERSION = 'Cryptopaper', '2.0.3'
+TITLE, VERSION = 'Cryptopaper', '2.0.4'
 LIBDIR = 'lib/'
 T_START = int(time.time())
 OPTIONS_FILE = 'options.txt'
@@ -92,7 +92,7 @@ def words():
         print_log("Watch list loaded: '" + ", ".join(watchWords) + "'")
     except:
         # Defaults :
-        watchWords = ['breaking', 'shot', 'troop', 'explo', 'nuclear', 'chemical', 'Ukraine', 'killed', 'Putin', 'Moscow'] 
+        watchWords = ['alert', 'biolog', 'bitcoin', 'bomb', 'breaking', 'budanov', 'casualt', 'chemical', 'Crimea', 'crypto', 'cyber', 'dead', 'detected', 'explod', 'explos', 'hypers', 'infect', 'jet', 'Kerch', 'killed', 'Kremlin', 'Kyiv', 'launch', 'military', 'missile', 'Moscow', 'NAFO', 'NATO', 'nuclear', 'outbreak', 'posture', 'Putin', 'radioac', 'readiness', 'rocket', 'shell', 'shot', 'siren', 'spreads', 'submarine', 'troop', 'ukraine', 'zelensky'] 
 
     return jsonify(watchWords)
 
