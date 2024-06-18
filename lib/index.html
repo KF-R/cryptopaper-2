@@ -649,20 +649,6 @@ function fetchBitcoinData() {
         .catch(error => console.error('Error fetching data:', error));
 }
 
-function uploadCanvas() {
-    let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/save', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-            console.log('Screenshot saved:', xhr.responseText);
-        }
-    };
-
-    xhr.send('imgBase64=' + encodeURIComponent(dataURL));
-}
-
 // Updates
 setInterval(fetchBitcoinData, 30000); // 30000 ms = 30 secs 
 setInterval(fetchLitecoinData, 300000); // 300000 ms = 5 mins
@@ -670,12 +656,7 @@ setInterval(fetchNews, 60000); // 60000 milliseconds = 1 min
 
 setInterval(fetchWarData, 86400000); // 86400000 ms = 24 hours
 setInterval(fetchBtcRubData, 21600000); // 21600000 ms = 6 hrs
-// setInterval(fetchWords, 7200000); // 7200000 ms = 2 hrs
 setInterval(fetchWeather, 3600000); // 3600000 ms = 1 hr
-
-// setInterval(uploadCanvas, 1000); // 1000 milliseconds = 1 second
-
-
 
 </script>
 </body>

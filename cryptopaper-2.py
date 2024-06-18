@@ -8,13 +8,12 @@ from werkzeug.utils import secure_filename
 
 from bs4 import BeautifulSoup                   # For BBC News scraping proxy
 import socket                                   # For confirming ip address
-import base64                                   # For parsing image uploads
 
 PORT = 5000
 DEFAULT_LOCALE = 'Toronto'
 locale = DEFAULT_LOCALE
 
-TITLE, VERSION = 'Cryptopaper', '2.0.2'
+TITLE, VERSION = 'Cryptopaper', '2.0.3'
 LIBDIR = 'lib/'
 T_START = int(time.time())
 OPTIONS_FILE = 'options.txt'
@@ -108,18 +107,6 @@ def status():
     }
     return jsonify(statusData)
 
-@app.route('/save', methods=['POST'])
-def save_canvas():
-    img_data = request.form['imgBase64']
-    img_data = img_data.replace('data:image/png;base64,', '')
-    img_data = base64.b64decode(img_data)
-
-    file_path = os.path.join(LIBDIR, 'canvas_image.png')
-    with open(file_path, 'wb') as f:
-        f.write(img_data)
-    
-    return jsonify({'status': 'success', 'file_path': file_path})
-
 @app.route('/options')
 def options():
     system_name = os.uname().nodename
@@ -188,4 +175,4 @@ def fetch_bbc_news():
 if __name__ == '__main__':
     print_log(f"v{VERSION}: Initialising...")
     read_locale()
-    app.run(debug=True, host='0.0.0.0', port=PORT, ssl_context='adhoc')
+    app.run(debug=False, host='0.0.0.0', port=PORT, ssl_context='adhoc')
