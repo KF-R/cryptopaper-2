@@ -65,7 +65,13 @@ Browse to the local URL, by default: https://127.0.0.1:5000/
     
 - Options
 
-    The weather locale is set by editing the `LOCATION` constant in `cryptopaper-2.py`. <br/>This string is fed to the most excellent [wttr.in](https://github.com/chubin/wttr.in), so any location strings valid there should also work here.<br/>You can also adjust the server `PORT` here, if necessary.
+    The weather locale can be set by editing the `DEFAULT_LOCALE` constant in `cryptopaper-2.py`. <br/>This string is fed to the most excellent [wttr.in](https://github.com/chubin/wttr.in), so any location strings valid there should also work here.<br/>You can also adjust the server `PORT` here, if necessary.
+
+- Integrated Options Editor
+
+    Pressing **O** reveals the _Options Editor_.
+  
+  You can add a new word to the watch word list (with **&lt;Enter&gt;**), edit or delete existing entries, or change the weather locale.
 
 - Sources
 
