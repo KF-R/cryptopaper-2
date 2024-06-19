@@ -8,16 +8,19 @@ from werkzeug.utils import secure_filename
 
 from bs4 import BeautifulSoup                   # For BBC News scraping proxy
 import socket                                   # For confirming ip address
+import qrcode
 
 PORT = 5000
 DEFAULT_LOCALE = 'Toronto'
 locale = DEFAULT_LOCALE
 
-TITLE, VERSION = 'Cryptopaper', '2.0.4'
+TITLE, VERSION = 'Cryptopaper', '2.0.5'
 LIBDIR = 'lib/'
 T_START = int(time.time())
 OPTIONS_FILE = 'options.txt'
 KEYWORDS_FILE = 'watch-words.txt'
+QR_FILENAME = 'qr.png'
+USE_SSL = False
 
 app = Flask(__name__, template_folder=LIBDIR)
 CORS(app)                                       # Enable CORS for all routes
@@ -50,16 +53,37 @@ def ip_address():
         ip = "(IP Timeout)"
     return ip
 
-    LOG_FILENAME = sys.argv[0].split('.')[0] + '.log'
+def generateQR(url='http://127.0.0.1:5000/', save_path='qrcode.png', transparentBackground=True, fgColor=(0, 0, 0)):
+    # Create a QR Code object
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
 
-    timestamp = time.strftime("%d/%b/%Y %H:%M:%S", time.localtime(time.time()))
-    newLogLine = f"localhost - - [{timestamp}] {log_string}"
+    # Add data to the QR Code
+    qr.add_data(url)
+    qr.make(fit=True)
 
-    if not noStdOut: print(newLogLine)
+    # Create an image from the QR Code instance
+    img = qr.make_image(fill_color=fgColor, back_color="white").convert('RGBA')
 
-    if(log_to_file):
-        with open(LOG_FILENAME, "a") as file:
-            file.write(f"{newLogLine}\n")   
+    if transparentBackground:
+        # Make the background transparent
+        data = img.getdata()
+        new_data = []
+        for item in data:
+            # Change all white pixels to transparent
+            if item[:3] == (255, 255, 255):
+                new_data.append((255, 255, 255, 0))
+            else:
+                new_data.append(item)
+
+        img.putdata(new_data)
+
+    img.save(save_path)
+    print_log(f"QR code file ({save_path}) updated with URL = '{url}'")
 
 def sanitize_watch_words(watch_words: str):
     lines = watch_words.split('\n')
@@ -175,4 +199,5 @@ def fetch_bbc_news():
 if __name__ == '__main__':
     print_log(f"v{VERSION}: Initialising...")
     read_locale()
-    app.run(debug=False, host='0.0.0.0', port=PORT, ssl_context='adhoc')
+    generateQR(url=f'http{("s" if USE_SSL else "")}://{ip_address()}:{PORT}/', save_path=os.path.join(LIBDIR, QR_FILENAME)) 
+    app.run(debug=False, host='0.0.0.0', port=PORT, ssl_context='adhoc' if USE_SSL else None)

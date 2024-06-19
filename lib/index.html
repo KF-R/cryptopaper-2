@@ -62,9 +62,14 @@ let warDataTS = 0;
 let keywordList = ['ukraine', 'killed', 'putin'];
 let keywordListTS = 0; // Timestamp of latest successful update (currently unused)
 
+let QRtimer = -1;
+let QRtimerLimit = 30000; // 30,000 ms
+
 function preload() {
-    font = loadFont('CNR.otf');
+    primaryFont = loadFont('CNR.otf');
+    secondaryFont = 'Ubuntu Mono';
     tryzub = loadImage('tryzub-100.png');
+    qrcode = loadImage('qr.png');
 }
 
 function setup() {
@@ -72,7 +77,7 @@ function setup() {
     createCanvas(WIN_W, WIN_H);
     textAlign(LEFT, TOP);
     textSize(32);
-    textFont(font);
+    textFont(primaryFont);
 
     fetchStatus();
     fetchWords();
@@ -112,6 +117,10 @@ function draw() {
 
     drawTimestamps();
 
+    if (QRtimer !== -1) {
+        drawQR();
+    }
+
     let canvas = document.querySelector('canvas');
     dataURL = canvas.toDataURL('image/png');
 }
@@ -123,7 +132,29 @@ function keyReleased() {
     white = white.map(value => constrain(value - 20, MIN_CONTRAST, 255));
   } else if (keyCode == 79) {   // 'o'
     window.location.href = '/options';
+  } else if (keyCode == 32) {   // ' '
+    QRtimer = millis();
   }
+}
+
+function drawQR() {
+    let elapsedTime = millis() - QRtimer;
+    if (elapsedTime >= QRtimerLimit) {
+        QRtimer = -1; // Reset the timer
+    } else {
+        push();
+        fill(white);
+        strokeWeight(1);
+        stroke(BLACK);
+        rect((width / 2) - 165, (height / 2) - 165, 330, 420);
+        image(qrcode, (width / 2) - 165, (height / 2) - 165);
+        noStroke();
+        fill(BLACK);
+        textAlign(CENTER);
+        textSize(24);
+        text(window.location + '\n\n' + nf(30 - (millis() - QRtimer) / 1000, 0, 0) + 's', (width / 2), (height / 2) + 160);
+        pop();
+    }
 }
 
 function drawTimestamps() {
@@ -151,7 +182,7 @@ function drawTimestamps() {
     noStroke();
     fill(BLACK);
     textSize(24);
-    textFont('Ubuntu Mono');
+    textFont(secondaryFont);
     text(TSline, 1480, CHART_BOTTOM + 56);
     pop();
 }
@@ -193,7 +224,7 @@ function drawExtras() {
     fill(BLACK);
     rect(x - 6, y, 6, 2); // Current month, current figure
     rect(x, y, 1, height - y - 4);
-    textFont('Ubuntu Mono');
+    textFont(secondaryFont);
 
     text('\u{2620} ' + nfc(warData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)), 10, CHART_BOTTOM + 10); // Sum of warData
     fontSize = 18;
@@ -232,7 +263,7 @@ function drawExtras() {
     noStroke();
     fill(BLACK);
     textSize(28);
-    textFont('Ubuntu Mono');
+    textFont(secondaryFont);
     text(nfc(nf(rubData[rubData.length - 1], 0, 0)) + '', 418, CHART_BOTTOM + 10);
     textSize(20);
     text('H: ' + nfc(nf(Math.max(...rubData), 0, 0)) + '', 420, CHART_BOTTOM + 40)
@@ -241,7 +272,7 @@ function drawExtras() {
 
     push();
     textSize(20);
-    textFont('Ubuntu Mono');
+    textFont(secondaryFont);
     textAlign(LEFT);
     text(weather, (width / 2) + 80, CHART_BOTTOM + 40);
     pop();
@@ -447,7 +478,7 @@ function drawStatus() {
     push();
     textSize(24);
     textAlign(LEFT);
-    textFont('Ubuntu Mono');
+    textFont(secondaryFont);
     text(LOCALE + '   ' + IP_ADDR + '   ' + contrastLevel, 1480, CHART_BOTTOM + 10);
     textAlign(RIGHT);
     text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
