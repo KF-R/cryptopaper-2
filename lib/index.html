@@ -146,13 +146,14 @@ function drawQR() {
         fill(white);
         strokeWeight(1);
         stroke(BLACK);
-        rect((width / 2) - 165, (height / 2) - 165, 330, 420);
+        rect((width / 2) - 200, (height / 2) - 165, 420, 420);
         image(qrcode, (width / 2) - 165, (height / 2) - 165);
         noStroke();
         fill(BLACK);
         textAlign(CENTER);
         textSize(24);
-        text(window.location + '\n\n' + nf(30 - (millis() - QRtimer) / 1000, 0, 0) + 's', (width / 2), (height / 2) + 160);
+        let url = window.location.protocol + '://' + IP_ADDR + ':' + window.location.port + '/';
+        text(url + '\n\n' + nf(30 - (millis() - QRtimer) / 1000, 0, 0) + 's', (width / 2), (height / 2) + 160);
         pop();
     }
 }
