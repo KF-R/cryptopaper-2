@@ -73,6 +73,10 @@ Browse to the local URL, by default: https://127.0.0.1:5000/
   
   You can add a new word to the watch word list (with **&lt;Enter&gt;**), edit or delete existing entries, or change the weather locale.
 
+- QR Code
+
+    Press **&lt;SPACE&gt;** to see the current URL and a corresponding QR code to make it easier to connect other devices on the same network to the service.
+
 - Sources
 
     Headlines are fetched from BBC World News (https://www.bbc.com/news/world).<br/>BTC and LTC data pulled from Bitstamp (https://www.bitstamp.net).<br/>Extra data pulled from https://russian-casualties.in.ua/ and Coindesk (https://www.coindesk.com).
