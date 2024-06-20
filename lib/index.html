@@ -144,10 +144,10 @@ function drawQR() {
     } else {
         push();
         fill(white);
-        strokeWeight(1);
+        strokeWeight(2);
         stroke(BLACK);
-        rect((width / 2) - 200, (height / 2) - 165, 420, 420);
-        image(qrcode, (width / 2) - 165, (height / 2) - 165);
+        rect((width / 2) - 225, (height / 2) - 170, 450, 450);
+        image(qrcode, (width / 2) - (qrcode.width / 2), (height / 2) - (qrcode.height / 2));
         noStroke();
         fill(BLACK);
         textAlign(CENTER);
@@ -182,9 +182,10 @@ function drawTimestamps() {
     push();
     noStroke();
     fill(BLACK);
-    textSize(24);
+    textSize(20);
     textFont(secondaryFont);
-    text(TSline, 1480, CHART_BOTTOM + 56);
+    textAlign(RIGHT);
+    text(TSline, width - 160, CHART_BOTTOM + 58);
     pop();
 }
 
@@ -480,9 +481,9 @@ function drawStatus() {
     textSize(24);
     textAlign(LEFT);
     textFont(secondaryFont);
-    text(LOCALE + '   ' + IP_ADDR + '   ' + contrastLevel, 1480, CHART_BOTTOM + 10);
+    text(LOCALE + '   ' + IP_ADDR + '   ' + contrastLevel, 1480, CHART_BOTTOM + 8);
     textAlign(RIGHT);
-    text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 10);
+    text('Up: ' + uptime(START_TIME), width, CHART_BOTTOM + 8);
     textSize(16);
     text('v' + CURRENT_VERSION, (width / 2) + 360, height - 18);
     pop();
